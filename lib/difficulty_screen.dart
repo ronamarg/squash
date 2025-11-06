@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'quiz_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'dart:math';
 
 // NOTE: Use the correct IP address for your running Flask service
 const String _apiUrl = 'http://192.168.1.8:5000/predict_level'; 
