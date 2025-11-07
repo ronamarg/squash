@@ -1,0 +1,100 @@
+import pandas as pd
+import Levenshtein
+import numpy as np
+import re
+
+# --- CONFIG ---
+INPUT_FILENAME = './dataset/master_dataset.csv'
+OUTPUT_FILENAME = './dataset/ffinal_dataset.csv'
+
+# Structural Tokens
+STRUCTURAL_TOKENS = {
+    '01busfares.py': ['int', 'if', 'elif', 'else', '<='],
+    '02-grade-calculator.py': ['int', 'if', 'elif', 'else', '>=', 'sum', 'len'],
+    'smallest-of-four.py': ['int', 'if', ' < '],
+    'square.py': ['int'],
+    'sum-five.py': ['int', 'for'],
+    'sum-five-abs.py': ['int', 'abs', 'for', 'if'],
+    'sum-five-pos-neg.py': ['int', 'if', 'else', 'for'],
+    'sum-five-abs-0.py': ['int', 'abs', 'while'],
+    'add-ten-numbers.py': ['int', 'for'], 
+    'add-ten-odd-numbers.py': ['int', 'for', 'if', 'mod']
+}
+# --- END CONFIG ---
+
+
+def calculate_structural_score_proxy(row):
+    task_name = row['task_name']
+    student_code = row['normalized_student_code']
+    required_tokens = STRUCTURAL_TOKENS.get(task_name, [])
+    
+    if not required_tokens:
+        return 1.0
+
+    match_count = 0
+    for token in required_tokens:
+        if token in student_code:
+            match_count += 1
+            
+    return match_count / len(required_tokens)
+
+
+def calculate_final_score(row):
+    student_code = row['normalized_student_code']
+    canonical_code = row['normalized_canonical_code']
+    
+    if not canonical_code or len(canonical_code) == 0:
+        return 0.0
+    if not student_code or student_code.lower() == 'nan': 
+        return 0.0
+        
+    distance = Levenshtein.distance(student_code, canonical_code)
+    s_lev = max(0.0, 1.0 - (distance / len(canonical_code)))
+    
+    p_structure = row['structural_score_proxy']
+    
+    final_score = (0.9 * p_structure) + (0.1 * s_lev)
+    
+    return final_score
+
+
+# --- EXECUTION ---
+try:
+    df = pd.read_csv(INPUT_FILENAME)
+    
+    df.columns = df.columns.str.lower().str.strip()
+    
+    print(f"Successfully loaded data {INPUT_FILENAME}.")
+except Exception as e:
+    print(f"Error: {e}")
+    exit()
+
+required_cols = {}
+for col in df.columns:
+    if 'task_name' in col: required_cols[col] = 'task_name'
+    elif 'normalized_student_code' in col: required_cols[col] = 'normalized_student_code'
+    elif 'normalized_canonical_code' in col: required_cols[col] = 'normalized_canonical_code'
+    elif 'instructional_prompt' in col: required_cols[col] = 'instructional_prompt'
+    elif 'proficiency' in col or 'proficiency' in col: required_cols[col] = 'proficiency'
+
+
+df = df.rename(columns=required_cols)
+
+df = df[list(required_cols.values())].copy()
+
+df.dropna(subset=['normalized_student_code', 'normalized_canonical_code'], inplace=True)
+df['structural_score_proxy'] = df.apply(calculate_structural_score_proxy, axis=1)
+df['Final_Score'] = df.apply(calculate_final_score, axis=1)
+df['code_length'] = df['normalized_student_code'].apply(lambda x: len(str(x)))
+df['token_count'] = df['normalized_student_code'].apply(lambda x: len(str(x).split()))
+df['canonical_code_length'] = df['normalized_canonical_code'].apply(lambda x: len(str(x)))
+df['canonical_token_count'] = df['normalized_canonical_code'].apply(lambda x: len(str(x).split()))
+
+ml_df = df[['task_name', 'instructional_prompt', 'normalized_student_code',
+            'normalized_canonical_code', 'Final_Score', 'code_length', 'token_count',
+            'canonical_code_length', 'canonical_token_count', 'proficiency']]
+
+ml_df.to_csv(OUTPUT_FILENAME, index=False)
+
+print(f"\nSuccessfully created the final ML dataset: {OUTPUT_FILENAME}")
+print(f"Total entries ready for Decision Tree training: {len(ml_df)}")

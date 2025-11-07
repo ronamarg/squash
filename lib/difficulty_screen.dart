@@ -4,17 +4,38 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 // NOTE: Use the correct IP address for your running Flask service
-const String _apiUrl = 'http://192.168.1.8:5000/predict_level'; 
+import 'config.dart';
+// Build the full endpoint at runtime (const concatenation with static const is okay)
+final String _apiUrl = '${Config.apiBase}/predict_level';
 
 // --- QUIZ DATA MUST BE DEFINED HERE (COPIED FROM quiz_screen.dart) ---
 final Map<String, List<Map<String, dynamic>>> fullQuizData = {
     "novice": [
-      // NOTE: Ensure this list contains all 20 questions for the main quiz.
-      {"question": "What is the correct way to print \"Hello World\"?", "options": ["print('Hello World')", "Print('Hello World')", "print Hello World", "echo 'Hello World'"], "correct": "print('Hello World')"},
-      {"question": "How do you declare a variable x with value 5?", "options": ["x = 5", "int x = 5", "var x = 5", "x := 5"], "correct": "x = 5"},
-      {"question": "What is the correct syntax for a for loop from 0 to 4?", "options": ["for i in range(5):", "for i in 0..4:", "for (int i=0; i<5; i++):", "foreach i in 0 to 4:"], "correct": "for i in range(5):"},
-      {"question": "How do you check if x is equal to 10?", "options": ["if x == 10:", "if x = 10:", "if x === 10:", "if x is 10:"], "correct": "if x == 10:"},
-      {"question": "What is the correct way to define a function?", "options": ["def my_function():", "function my_function():", "def my_function{}", "func my_function():"], "correct": "def my_function():"},
+      {
+        "question": "Fix this code to print 'Hello World' correctly:",
+        "broken_code": "print hello world",
+        "correct_code": "print('Hello World')"
+      },
+      {
+        "question": "Fix this code to declare variable x with value 5:",
+        "broken_code": "x := 5",
+        "correct_code": "x = 5"
+      },
+      {
+        "question": "Fix this code to create a loop from 0 to 4:",
+        "broken_code": "for i in 0..4:\n    print(i)",
+        "correct_code": "for i in range(5):\n    print(i)"
+      },
+      {
+        "question": "Fix this code to check if x equals 10:",
+        "broken_code": "if x = 10:\n    print('equals 10')",
+        "correct_code": "if x == 10:\n    print('equals 10')"
+      },
+      {
+        "question": "Fix this code to define a function correctly:",
+        "broken_code": "function my_function():\n    print('hello')",
+        "correct_code": "def my_function():\n    print('hello')"
+      },
       {"question": "What is the output of print(2 + 3)?", "options": ["5", "23", "2+3", "print(5)"], "correct": "5"},
       {"question": "How do you create a list with numbers 1,2,3?", "options": ["[1,2,3]", "(1,2,3)", "{1,2,3}", "list(1,2,3)"], "correct": "[1,2,3]"},
       {"question": "What is the keyword for defining a function?", "options": ["def", "function", "func", "define"], "correct": "def"},

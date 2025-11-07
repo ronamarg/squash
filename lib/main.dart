@@ -1,12 +1,31 @@
 import 'package:flutter/material.dart';
-import 'difficulty_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'onboarding_screen.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    // Just to ensure SharedPreferences is initialized
+    SharedPreferences.getInstance().then((_) {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +42,9 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const DifficultyScreen(),
+      home: _loading
+          ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+          : const OnboardingScreen(),
     );
   }
 }
