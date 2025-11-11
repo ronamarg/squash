@@ -1,8 +1,8 @@
 import pandas as pd
 import re
 
-INPUT_FILENAME = 'initial_dataset.xlsx'
-OUTPUT_FILENAME = 'master_dataset.csv'
+INPUT_FILENAME = '../../data/raw/initial_dataset.xlsx'
+OUTPUT_FILENAME = '../../data/processed/master_dataset.csv'
 
 def normalize_code(code_string):
     if pd.isna(code_string):

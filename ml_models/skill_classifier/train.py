@@ -8,7 +8,11 @@ import os
 import joblib
 
 # --- CONFIG ---
-INPUT_FILENAMES = ['./dataset/final_dataset.csv', './final_dataset.csv', 'final_dataset.csv']
+INPUT_FILENAMES = [
+    '../../data/processed/final_dataset.csv',
+    './final_dataset.csv',
+    'final_dataset.csv'
+]
 RANDOM_STATE = 42
 MODEL_OUTPUT = 'rf_model.joblib'
 # --- END CONFIG ---

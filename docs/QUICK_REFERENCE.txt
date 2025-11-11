@@ -1,0 +1,112 @@
+╔════════════════════════════════════════════════════════════════╗
+║          CODE CORRUPTOR QUICK REFERENCE CARD                   ║
+╚════════════════════════════════════════════════════════════════╝
+
+┌─ TRAINING ─────────────────────────────────────────────────────┐
+│                                                                 │
+│  Quick Start:       run_training.bat                            │
+│  Manual Training:   python train_code_corruptor.py              │
+│  Monitor:           tensorboard --logdir=code_corruptor_model   │
+│  Analyze Dataset:   python analyze_dataset.py                   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─ INFERENCE ────────────────────────────────────────────────────┐
+│                                                                 │
+│  CLI Single:    python infer_code_corruptor.py \                │
+│                   --code "print('hello')"                       │
+│                                                                 │
+│  CLI File:      python infer_code_corruptor.py \                │
+│                   --file my_code.py                             │
+│                                                                 │
+│  Python API:    from infer_code_corruptor import CodeCorruptor │
+│                 corruptor = CodeCorruptor(MODEL_PATH)           │
+│                 buggy = corruptor.corrupt_code(code)            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─ API SERVER ───────────────────────────────────────────────────┐
+│                                                                 │
+│  Start:         python api_server.py                            │
+│  URL:           http://localhost:5000                           │
+│                                                                 │
+│  Endpoints:     POST /corrupt         - Single corruption       │
+│                 POST /corrupt/batch   - Batch corruption        │
+│                 POST /generate_quiz   - Generate quiz           │
+│                 GET  /health          - Health check            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─ DIFFICULTY LEVELS ────────────────────────────────────────────┐
+│                                                                 │
+│  Easy:          temperature=0.3-0.5   (simple syntax errors)    │
+│  Medium:        temperature=0.7-0.9   (common mistakes)         │
+│  Hard:          temperature=1.2-1.5   (subtle bugs)             │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─ KEY FILES ────────────────────────────────────────────────────┐
+│                                                                 │
+│  Training:          train_code_corruptor.py                     │
+│  Inference:         infer_code_corruptor.py                     │
+│  Evaluation:        evaluate_corruptor.py                       │
+│  API:               api_server.py                               │
+│  Flutter Service:   lib/services/code_corruptor_service.dart    │
+│                                                                 │
+│  Dataset:           -code_corrupt/code_bug_fix_pairs.csv        │
+│  Trained Model:     code_corruptor_model/final_model/           │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─ CONFIGURATION ────────────────────────────────────────────────┐
+│                                                                 │
+│  Model:         Salesforce/codet5-base (220M params)            │
+│  Batch Size:    8 (adjust for GPU memory)                       │
+│  Epochs:        10                                              │
+│  Max Length:    512 tokens                                      │
+│  Learning Rate: 5e-5                                            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─ EVALUATION METRICS ───────────────────────────────────────────┐
+│                                                                 │
+│  BLEU Score:        >40 (good), >60 (excellent)                 │
+│  ROUGE-L:           >50 (good), >70 (excellent)                 │
+│  Similarity:        >60% (good), >80% (excellent)               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─ TROUBLESHOOTING ──────────────────────────────────────────────┐
+│                                                                 │
+│  Out of Memory:     Reduce BATCH_SIZE to 4 or 2                │
+│  Slow Training:     Use GPU, or try codet5-small                │
+│  Poor Quality:      Train longer, use larger model              │
+│  API Not Working:   Check python api_server.py is running       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─ FLUTTER INTEGRATION ──────────────────────────────────────────┐
+│                                                                 │
+│  final service = CodeCorruptorService();                        │
+│                                                                 │
+│  final quiz = await service.generateQuiz(                       │
+│    correctCode: solution,                                       │
+│    question: 'Fix this bug:',                                   │
+│    difficulty: 'medium',                                        │
+│  );                                                             │
+│                                                                 │
+│  // Use quiz.buggyCode in your UI                               │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+┌─ DOCUMENTATION ────────────────────────────────────────────────┐
+│                                                                 │
+│  README:            CODE_CORRUPTOR_README.md                    │
+│  Full Guide:        CODE_CORRUPTION_GUIDE.md                    │
+│  This Card:         QUICK_REFERENCE.txt                         │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+
+╔════════════════════════════════════════════════════════════════╗
+║  Need help? See CODE_CORRUPTION_GUIDE.md for detailed docs     ║
+╚════════════════════════════════════════════════════════════════╝
