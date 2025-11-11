@@ -5,10 +5,12 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import '../config.dart';
+
 class CodeCorruptorService {
   final String baseUrl;
   
-  CodeCorruptorService({this.baseUrl = 'http://localhost:5000'});
+  CodeCorruptorService({this.baseUrl = Config.corruptorApiBase});
 
   /// Check if the API server is running
   Future<bool> healthCheck() async {

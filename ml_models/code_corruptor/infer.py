@@ -25,8 +25,9 @@ class CodeCorruptor:
             self.device = torch.device(device)
         
         print(f"Loading model from {model_path}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_path).to(self.device)
+        # Use local_files_only to prevent HuggingFace from trying to download/validate
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, local_files_only=True).to(self.device)
         self.model.eval()
         print(f"Model loaded on {self.device}")
     

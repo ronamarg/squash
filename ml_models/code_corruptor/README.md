@@ -80,7 +80,7 @@ Shows 19 different code examples from simple to complex, each corrupted with log
 ## Performance
 
 - Training: 12 epochs, 23 minutes on RTX 3060 Ti
-- Test loss: 0.000116 (very good)
+- Test loss: 0.000116 
 - Speed: ~0.5s to corrupt a typical function
 
 

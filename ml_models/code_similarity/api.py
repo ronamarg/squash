@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import joblib
 import numpy as np
 import os
@@ -77,6 +78,12 @@ def _weighted_levenshtein(a: str, b: str) -> float:
     return dp[la][lb]
 
 app = Flask(__name__)
+CORS(app)
+
+@app.route('/health', methods=['GET'])
+def health():
+    """Health check endpoint"""
+    return jsonify({'status': 'ok', 'service': 'code_similarity'})
 
 def get_edit_distance_score(answer: str, original: str) -> int:
     """Calculate similarity score between two code snippets."""
@@ -123,8 +130,8 @@ def get_edit_distance_score(answer: str, original: str) -> int:
     score = round((1.0 - ratio) * 100)
     return max(0, min(100, score))
 
-@app.route('/score_code', methods=['POST'])
-def score_code():
+@app.route('/score', methods=['POST'])
+def score():
     try:
         data = request.get_json()
         student_code = data.get('student_code', '')
@@ -138,57 +145,7 @@ def score_code():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-# Load model (train_classifier.py should save it as 'rf_model.joblib')
-MODEL_PATH = 'rf_model.joblib'
-if os.path.exists(MODEL_PATH):
-    model = joblib.load(MODEL_PATH)
-else:
-    model = None
-
-@app.route('/predict_level', methods=['POST'])
-def predict_level():
-    data = request.get_json()
-    global model
-    if model is None:
-        return jsonify({'error': 'Model not loaded. Please train and provide rf_model.joblib.'}), 500
-    try:
-        if all(k in data for k in ['final_score', 'code_length', 'token_count', 'canonical_code_length', 'canonical_token_count']):
-            final_score = float(data.get('final_score'))
-            code_length = float(data.get('code_length'))
-            token_count = float(data.get('token_count'))
-            canonical_code_length = float(data.get('canonical_code_length'))
-            canonical_token_count = float(data.get('canonical_token_count'))
-        else:
-            answers = [int(data.get(f'q{i+1}', 0)) for i in range(5)]
-            score = sum(answers) / 5.0
-            final_score = float(score)
-            code_length = float(data.get('code_length', 120.0))
-            token_count = float(data.get('token_count', 30.0))
-            canonical_code_length = float(data.get('canonical_code_length', 120.0))
-            canonical_token_count = float(data.get('canonical_token_count', 30.0))
-
-        features = np.array([[final_score, code_length, token_count, canonical_code_length, canonical_token_count]])
-        pred = model.predict(features)[0]
-        return jsonify({'level': pred})
-    except Exception as e:
-        return jsonify({'error': f'Model prediction failed: {e}'}), 500
-
-
-@app.route('/reload_model', methods=['POST'])
-def reload_model():
-    """Development helper: attempt to (re)load MODEL_PATH and report status.
-
-    POST to this endpoint when you've replaced/created rf_model.joblib on disk and
-    want the running server to pick it up without restarting.
-    """
-    global model
-    if not os.path.exists(MODEL_PATH):
-        return jsonify({'ok': False, 'error': f'{MODEL_PATH} not found on server.'}), 404
-    try:
-        model = joblib.load(MODEL_PATH)
-        return jsonify({'ok': True, 'message': f'Loaded {MODEL_PATH}'}), 200
-    except Exception as e:
-        return jsonify({'ok': False, 'error': f'Failed to load model: {e}'}), 500
-
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = 5003
+    print(f"Starting Code Similarity API on port {port}...")
+    app.run(host='0.0.0.0', port=port, debug=False, threaded=False, use_reloader=False)

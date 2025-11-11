@@ -1,9 +1,11 @@
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'dart:async';
-import 'dart:math';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'config.dart';
 import 'difficulty_screen.dart';
 import 'main_menu.dart';
@@ -50,44 +52,79 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
   Future<void> _classifyAndNavigate() async {
     final payload = <String, int>{};
     for (int i = 0; i < _answers.length; i++) payload['q${i + 1}'] = _answers[i];
-    String determinedLevel = 'novice';
+    
     try {
-      final url = Uri.parse('${Config.apiBase}/predict_level');
+      final url = Uri.parse('${Config.skillApiBase}/predict_level');
       final resp = await http.post(
         url, 
         headers: {'Content-Type': 'application/json'}, 
         body: json.encode(payload)
       ).timeout(
-        const Duration(seconds: 2),
+        const Duration(seconds: 10),
         onTimeout: () => throw TimeoutException('API request timed out'),
       );
+      
       if (resp.statusCode == 200) {
         final body = json.decode(resp.body);
-        determinedLevel = (body['level'] ?? 'novice').toString().toLowerCase();
+        final determinedLevel = (body['level'] ?? 'novice').toString().toLowerCase();
+        
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('onboardingSeen', true);
+        await prefs.setString('userLevel', determinedLevel);
+        
+        if (!mounted) return;
+
+        List<Map<String, dynamic>> questionsForLevel;
+        try {
+          questionsForLevel = fullQuizData.containsKey(determinedLevel) 
+              ? fullQuizData[determinedLevel]! 
+              : fullQuizData['novice']!;
+        } catch (_) {
+          questionsForLevel = fullQuizData['novice']!;
+        }
+
+        // Hide any soft keyboard/IME before navigating
+        try {
+          FocusScope.of(context).unfocus();
+        } catch (_) {}
+
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => MainMenuScreen(
+              level: determinedLevel, 
+              questionsToLoad: questionsForLevel
+            )
+          )
+        );
+      } else {
+        throw Exception('API returned ${resp.statusCode}');
       }
     } catch (e) {
-      // network error or timeout; default to novice
-      print('Assessment classify failed: $e');
+      // Show error to user instead of silently defaulting
+      if (!mounted) return;
+      setState(() => _loading = false);
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Connection Error'),
+          content: Text('Could not connect to skill classifier API.\n\nError: $e\n\nMake sure the unified API is running on port 5001.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                setState(() => _loading = true);
+                _classifyAndNavigate(); // Retry
+              },
+              child: const Text('Retry'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Cancel'),
+            ),
+          ],
+        ),
+      );
     }
-
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('onboardingSeen', true);
-    await prefs.setString('userLevel', determinedLevel);
-    if (!mounted) return;
-
-    List<Map<String, dynamic>> questionsForLevel;
-    try {
-      questionsForLevel = fullQuizData.containsKey(determinedLevel) ? fullQuizData[determinedLevel]! : fullQuizData['novice']!;
-    } catch (_) {
-      questionsForLevel = fullQuizData['novice']!;
-    }
-
-    // Hide any soft keyboard/IME before navigating to avoid IME race conditions
-    try {
-      FocusScope.of(context).unfocus();
-    } catch (_) {}
-
-    Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => MainMenuScreen(level: determinedLevel, questionsToLoad: questionsForLevel)));
   }
 
   // Randomize options while preserving the correct answer mapping

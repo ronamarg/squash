@@ -4,15 +4,16 @@ Serve the trained model as a REST API for your Flutter app
 """
 
 from flask import Flask, request, jsonify
-from infer_code_corruptor import CodeCorruptor
+from flask_cors import CORS
+from revertV3 import RevertV3
 import os
 
 app = Flask(__name__)
+CORS(app)
 
 # Initialize the model (load once at startup)
-MODEL_PATH = os.environ.get('MODEL_PATH', './code_corruptor_model/final_model')
-print(f"Loading model from {MODEL_PATH}...")
-corruptor = CodeCorruptor(MODEL_PATH)
+print("Initializing Code Corruptor V3...")
+corruptor = RevertV3()
 print("Model loaded successfully!")
 
 
@@ -30,17 +31,14 @@ def corrupt_code():
     Request body:
     {
         "code": "def hello():\n    print('world')",
-        "num_variants": 1,  // optional, default 1
-        "temperature": 0.8,  // optional, default 0.8
-        "difficulty": "medium"  // optional: easy/medium/hard
+        "difficulty": "novice"  // optional
     }
     
     Response:
     {
         "success": true,
-        "original_code": "...",
-        "corrupted_code": "..." or ["...", "..."],  // array if num_variants > 1
-        "num_variants": 1
+        "original": "...",
+        "corrupted": "..."
     }
     """
     try:
@@ -53,30 +51,14 @@ def corrupt_code():
             }), 400
         
         code = data['code']
-        num_variants = data.get('num_variants', 1)
         
-        # Map difficulty to temperature
-        difficulty = data.get('difficulty', 'medium')
-        temperature_map = {
-            'easy': 0.5,    # More conservative, common bugs
-            'medium': 0.8,  # Balanced
-            'hard': 1.2     # More creative, subtle bugs
-        }
-        temperature = data.get('temperature', temperature_map.get(difficulty, 0.8))
-        
-        # Generate corruption
-        corrupted = corruptor.corrupt_code(
-            code,
-            temperature=temperature,
-            num_return_sequences=num_variants
-        )
+        # Generate corruption using RevertV3
+        corrupted = corruptor.corrupt(code)
         
         return jsonify({
             'success': True,
-            'original_code': code,
-            'corrupted_code': corrupted,
-            'num_variants': num_variants,
-            'temperature': temperature
+            'original': code,
+            'corrupted': corrupted
         })
         
     except Exception as e:
@@ -202,7 +184,7 @@ def generate_quiz():
 
 if __name__ == '__main__':
     # Run the server
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 5001))
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
     
     print(f"\n{'='*60}")

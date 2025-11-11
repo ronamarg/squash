@@ -1,7 +1,9 @@
-import 'package:flutter/material.dart';
 import 'dart:math';
+
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'services/code_scorer.dart';
+
+import 'config.dart';
 
 // Define a type for your question data for clarity
 typedef QuestionData = List<Map<String, dynamic>>;
@@ -241,7 +243,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                 onPressed: () async {
                                   // Call scoring API
                                   final userCode = _codeController.text;
-                                  final url = Uri.parse('http://127.0.0.1:5000/score_code');
+                                  final url = Uri.parse('${Config.similarityApiBase}/score_code');
                                   final response = await http.post(
                                     url,
                                     headers: {'Content-Type': 'application/json'},

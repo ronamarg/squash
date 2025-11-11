@@ -99,6 +99,23 @@ class RevertV3:
         Initialize RevertV3
         
         Args:
+            model_path: Path to trained T5 model
+            difficulty: 'beginner' or 'advanced'
+        """
+        # Convert relative path to absolute path
+        import os
+        if not os.path.isabs(model_path):
+            # Resolve relative to this file's directory
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            model_path = os.path.join(base_dir, model_path)
+        
+        self.model_path = model_path
+        self.difficulty = difficulty.lower()
+        self.t5_model = None  # Lazy load
+        """
+        Initialize RevertV3
+        
+        Args:
             model_path: Path to enhanced T5 model
             difficulty: Always uses 'advanced' settings (parameter kept for compatibility)
         """
@@ -116,9 +133,17 @@ class RevertV3:
     def _load_t5_model(self):
         """Lazy load enhanced T5 model"""
         if self.t5_model is None:
+            import sys
+            import os
+            # Add code_corruptor directory to path so infer.py can be found
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            if current_dir not in sys.path:
+                sys.path.insert(0, current_dir)
+            
             from infer import CodeCorruptor
             print(f"Loading enhanced model from {self.model_path}...")
-            self.t5_model = CodeCorruptor(self.model_path)
+            # Use local_files_only to prevent HuggingFace repo validation
+            self.t5_model = CodeCorruptor(self.model_path, device='cpu')  # Force CPU for compatibility
             print("Model loaded!")
     
     def corrupt(self, code: str) -> str:
