@@ -20,7 +20,9 @@ class _MyAppState extends State<MyApp> {
   @override 
   void initState() { 
     super.initState(); 
-    SharedPreferences.getInstance().then((_) { 
+    SharedPreferences.getInstance().then((prefs) async { 
+      // Set user level to intermediate
+      await prefs.setString('userLevel', 'intermediate');
       if (mounted) { 
         setState(() => _loading = false); 
       } 

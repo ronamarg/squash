@@ -29,7 +29,18 @@ class CodeCorruptor:
         self.tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, local_files_only=True).to(self.device)
         self.model.eval()
-        print(f"Model loaded on {self.device}")
+        
+        # Warmup: Run a dummy inference to compile/optimize the model
+        print("Warming up model...")
+        self._warmup()
+        print(f"Model loaded and ready on {self.device}")
+    
+    def _warmup(self):
+        """Warmup the model with a dummy inference to optimize performance"""
+        dummy_input = "corrupt: def add(a, b): return a + b"
+        inputs = self.tokenizer(dummy_input, return_tensors='pt').to(self.device)
+        with torch.inference_mode():
+            _ = self.model.generate(**inputs, max_length=50, num_beams=1)
     
     def corrupt_code(
         self, 
@@ -74,7 +85,7 @@ class CodeCorruptor:
         min_length = max(10, int(input_length * 0.8))
         
         # Generate
-        with torch.no_grad():
+        with torch.inference_mode():  # More efficient than no_grad for inference
             outputs = self.model.generate(
                 **inputs,
                 max_length=max_length,

@@ -1,11 +1,13 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'difficulty_screen.dart';
-import 'config.dart';
-import 'main_menu.dart';
-import 'assessment_screen.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'assessment_screen.dart';
+import 'config.dart';
+import 'difficulty_screen.dart';
+import 'main_menu.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -114,7 +116,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.school, size: 120, color: Colors.orange.shade300),
+          // Logo at the top - larger size
+          Image.asset(
+            '_img/iconSqTEXT.png',
+            height: 180,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 48),
+          Icon(Icons.school, size: 80, color: Colors.orange.shade300),
           const SizedBox(height: 32),
           Text(
             data['title']!,
@@ -216,6 +225,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Image.asset(
+          '_img/iconSqTEXT.png',
+          height: 40,
+          fit: BoxFit.contain,
+        ),
+        backgroundColor: Colors.orange,
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: _showAssessment
             ? _buildAssessment()

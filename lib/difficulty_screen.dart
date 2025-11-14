@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
-import 'quiz_screen.dart';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 // NOTE: Use the correct IP address for your running Flask service
 import 'config.dart';
+import 'quiz_screen.dart';
 // Build the full endpoint at runtime (const concatenation with static const is okay)
 final String _apiUrl = '${Config.apiBase}/predict_level';
 
@@ -133,8 +134,13 @@ class DifficultyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Squash Level Assessment'),
+        title: Image.asset(
+          '_img/iconSqTEXT.png',
+          height: 40,
+          fit: BoxFit.contain,
+        ),
         backgroundColor: Colors.orange,
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -142,6 +148,15 @@ class DifficultyScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch, 
           children: [
+            // Logo at the top - larger size
+            Center(
+              child: Image.asset(
+                '_img/iconSqTEXT.png',
+                height: 180,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 48),
             const Text(
               'Run Initial Assessment',
               textAlign: TextAlign.center,

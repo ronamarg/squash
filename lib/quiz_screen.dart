@@ -157,12 +157,13 @@ class _QuizScreenState extends State<QuizScreen> {
           title: const Text("Quiz Complete!"),
           content: Text("You scored $score out of ${currentQuizData.length}!"),
           actions: [
-            TextButton(
+            TextButton.icon(
               onPressed: () {
                 Navigator.pop(context); // close summary
                 Navigator.pop(context); // back to difficulty screen
               },
-              child: const Text("Back to Difficulty"),
+              icon: const Icon(Icons.arrow_back, size: 18),
+              label: const Text("Back to Difficulty"),
             ),
           ],
         ),
