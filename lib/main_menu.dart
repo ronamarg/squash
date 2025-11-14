@@ -13,8 +13,14 @@ class MainMenuScreen extends StatelessWidget {
     final displayLevel = (level.isEmpty) ? 'novice' : level;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Squash - Debug Practice'),
+        title: Image.asset(
+          '_img/iconSqTEXT.png',
+          height: 40,
+          fit: BoxFit.contain,
+        ),
         backgroundColor: Colors.orange,
+        automaticallyImplyLeading: false,
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),
@@ -22,6 +28,16 @@ class MainMenuScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Logo at the top - larger size
+            Center(
+              child: Image.asset(
+                '_img/iconSqTEXT.png',
+                height: 180,
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 32),
+            
             // User level card
             Card(
               elevation: 4,

@@ -28,6 +28,7 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
   bool _showingResult = false;
   int? _currentScore;
   String? _feedback;
+  String? _validationError;
 
   @override
   void initState() {
@@ -48,6 +49,7 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
       _showingResult = false;
       _currentScore = null;
       _feedback = null;
+      _validationError = null;
     });
 
     try {
@@ -82,13 +84,16 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
 
   Future<void> _submitAnswer() async {
     if (_answerController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your answer')),
-      );
+      setState(() {
+        _validationError = 'Please enter your answer';
+      });
       return;
     }
 
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _validationError = null;
+    });
 
     try {
       // Score the answer using code_similarity API
@@ -143,8 +148,13 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fix the Code'),
+        title: Image.asset(
+          '_img/iconSqTEXT.png',
+          height: 40,
+          fit: BoxFit.contain,
+        ),
         backgroundColor: Colors.orange,
+        centerTitle: true,
         actions: [
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -276,6 +286,32 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                           ),
                         ),
                         const SizedBox(height: 16),
+                        if (_validationError != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange.shade300),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.warning_amber, color: Colors.orange.shade700, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _validationError!,
+                                    style: TextStyle(
+                                      color: Colors.orange.shade900,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         ElevatedButton(
                           onPressed: _nextQuestion,
                           style: ElevatedButton.styleFrom(
@@ -288,6 +324,32 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                           ),
                         ),
                       ] else ...[
+                        if (_validationError != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.orange.shade300),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.warning_amber, color: Colors.orange.shade700, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _validationError!,
+                                    style: TextStyle(
+                                      color: Colors.orange.shade900,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         ElevatedButton(
                           onPressed: _submitAnswer,
                           style: ElevatedButton.styleFrom(
@@ -301,9 +363,13 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                         ),
                       ],
                       const SizedBox(height: 12),
-                      OutlinedButton(
+                      OutlinedButton.icon(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('Back to Menu'),
+                        icon: const Icon(Icons.arrow_back, size: 18),
+                        label: const Text('Back to Menu'),
+                        style: OutlinedButton.styleFrom(
+                          minimumSize: const Size.fromHeight(44),
+                        ),
                       ),
                     ],
                   ),

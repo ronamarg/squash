@@ -33,7 +33,10 @@ CORS(app)
 # Initialize models
 print("Loading models...")
 code_corruptor = RevertV3()
-print("✓ Code Corruptor (RevertV3) loaded")
+# Preload T5 model to avoid delay on first request
+print("Preloading T5 model...")
+code_corruptor._load_t5_model()
+print("✓ Code Corruptor (RevertV3) with T5 model loaded")
 print(f"✓ Skill Classifier loaded from {MODEL_PATH}")
 print(f"✓ Loaded {len(NOVICE_SNIPPETS)} novice code snippets")
 print(f"✓ Loaded {len(INTERMEDIATE_SNIPPETS)} intermediate code snippets")
@@ -329,7 +332,17 @@ def get_edit_distance_score(answer: str, original: str) -> int:
     total_penalty = distance + logic_penalty + syntax_penalty
     max_cost = sum(_syntax_weight(ch) for ch in a) + sum(_syntax_weight(ch) for ch in b) + MAX_COST_OVERSHOOT
     ratio = min(1.0, total_penalty / max_cost) if max_cost > 0 else 1.0
-    score = round((1.0 - ratio) * 100)
+    
+    # Apply non-linear scoring curve
+    # Flatter at low similarity (0-40), steeper at high similarity (60-100)
+    # Using quadratic curve: score = (1 - ratio)^2 * 100
+    # This means:
+    # - If ratio = 0.8 (very different): score = (0.2)^2 * 100 = 4
+    # - If ratio = 0.5 (somewhat different): score = (0.5)^2 * 100 = 25
+    # - If ratio = 0.2 (very similar): score = (0.8)^2 * 100 = 64
+    # - If ratio = 0.1 (almost identical): score = (0.9)^2 * 100 = 81
+    similarity_ratio = 1.0 - ratio
+    score = round((similarity_ratio ** 2) * 100)
     return max(0, min(100, score))
 
 @app.route('/score', methods=['POST'])

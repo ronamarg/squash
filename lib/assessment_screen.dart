@@ -139,33 +139,45 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     final q = _questions[_index];
     final randomizedOptions = _getRandomizedOptions(q);
     
-    return Scaffold(
-      appBar: AppBar(title: const Text('Assessment'), backgroundColor: Colors.orange),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Question ${_index + 1} of ${_questions.length}', style: const TextStyle(color: Colors.grey)),
-                  const SizedBox(height: 12),
-                  Text(q['question'], textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 24),
-                  ...List.generate(randomizedOptions.length, (i) {
-                    final opt = randomizedOptions[i];
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, minimumSize: const Size.fromHeight(48)),
-                        onPressed: () => _answer(opt),
-                        child: Text(opt, style: const TextStyle(fontSize: 16)),
-                      ),
-                    );
-                  }),
-                ],
+    return WillPopScope(
+      onWillPop: () async => false, // Prevent back navigation
+      child: Scaffold(
+        appBar: AppBar(
+          title: Image.asset(
+            '_img/iconSqTEXT.png',
+            height: 40,
+            fit: BoxFit.contain,
+          ),
+          backgroundColor: Colors.orange,
+          automaticallyImplyLeading: false,
+          centerTitle: true,
+        ),
+        body: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Question ${_index + 1} of ${_questions.length}', style: const TextStyle(color: Colors.grey)),
+                    const SizedBox(height: 12),
+                    Text(q['question'], textAlign: TextAlign.center, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                    const SizedBox(height: 24),
+                    ...List.generate(randomizedOptions.length, (i) {
+                      final opt = randomizedOptions[i];
+                      return Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, minimumSize: const Size.fromHeight(48)),
+                          onPressed: () => _answer(opt),
+                          child: Text(opt, style: const TextStyle(fontSize: 16)),
+                        ),
+                      );
+                    }),
+                  ],
+                ),
               ),
-            ),
+      ),
     );
   }
 }
