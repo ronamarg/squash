@@ -1,6 +1,222 @@
-# Squash App
+# Squash - Coding Education Platform# 🎯 Squash - Coding Education Platform
 
-This repository contains the **Squash Flutter App**. Follow these step-by-step instructions to set up and run the app locally.
+
+
+Flutter-based coding education app with AI-powered features for learning Python.A Flutter-based coding education app with AI-powered features for personalized learning.
+
+
+
+## 🚀 Quick Start## 🚀 Quick Start
+
+
+
+### Flutter App### New to this project?
+
+```bash**→ Read [`docs/START_HERE.txt`](docs/START_HERE.txt)** for a complete visual overview.
+
+flutter pub get
+
+flutter run### Want to run the Flutter app?
+
+```**→ See [`docs/README_FLUTTER_SETUP.md`](docs/README_FLUTTER_SETUP.md)** for detailed Flutter setup.
+
+
+
+### ML Models (Optional - for backend features)### Want to use ML models?
+
+```bash**→ Run `ml_menu.bat`** for an interactive menu to access all ML models.
+
+# Interactive menu for all ML operations
+
+ml_menu.bat### Looking for documentation?
+
+**→ Check [`docs/`](docs/)** folder for all guides and references.
+
+# Or manually start APIs:
+
+cd ml_models/code_similarity && python api.py## 📁 Project Structure
+
+```
+
+```
+
+## 📁 Project Structuresquash/
+
+├── lib/              Flutter app code
+
+```├── ml_models/        Machine learning models
+
+squash/│   ├── skill_classifier/    Random Forest classifier
+
+├── lib/              # Flutter app│   ├── code_similarity/     Similarity scorer
+
+├── ml_models/        # ML models (Random Forest, CodeT5, etc.)│   ├── code_corruptor/      Deep learning bug generator
+
+├── data/             # Datasets│   └── shared/              Common utilities
+
+└── docs/             # Documentation├── data/             Datasets (raw & processed)
+
+```├── docs/             📚 All documentation
+
+└── android/ios/web/  Platform builds
+
+## 🤖 ML Models```
+
+
+
+| Model | Type | Purpose |## 🤖 ML Models
+
+|-------|------|---------|
+
+| Skill Classifier | Random Forest | Classify student proficiency || Model | Purpose | Location |
+
+| Code Similarity | Custom Algorithm | Score code similarity ||-------|---------|----------|
+
+| Code Corruptor | CodeT5 Transformer | Generate buggy code || **Skill Classifier** | Classify student proficiency | `ml_models/skill_classifier/` |
+
+| **Code Similarity** | Score code similarity | `ml_models/code_similarity/` |
+
+**See `ml_models/README.md` for detailed ML documentation.**| **Code Corruptor** | Generate buggy code (AI) | `ml_models/code_corruptor/` |
+
+
+
+## 📚 Documentation## 📚 Documentation
+
+
+
+Essential docs in `docs/`:- **[Start Here](docs/START_HERE.txt)** - Complete overview ⭐
+
+- **ML_ORGANIZATION.md** - ML models overview- **[Flutter Setup](docs/README_FLUTTER_SETUP.md)** - Flutter app setup guide
+
+- **CODE_CORRUPTION_GUIDE.md** - Deep learning guide- **[Directory Tree](docs/DIRECTORY_TREE.txt)** - Full structure map
+
+- **QUICK_REFERENCE.txt** - Common commands- **[ML Organization](docs/ML_ORGANIZATION.md)** - ML models guide
+
+- **DIRECTORY_TREE.txt** - Visual structure- **[Quick Reference](docs/QUICK_REFERENCE.txt)** - Command reference
+
+- **[Code Corruptor Guide](docs/CODE_CORRUPTION_GUIDE.md)** - Deep learning tutorial
+
+## 📦 Dependencies
+
+See [`docs/README.md`](docs/README.md) for complete documentation index.
+
+**Flutter:** See `pubspec.yaml`
+
+## 🛠️ Setup
+
+**Python:**
+
+```bash### Flutter App
+
+pip install -r requirements.txt        # Basic ML```bash
+
+pip install -r requirements_dl.txt     # Deep Learning (optional)flutter pub get
+
+```flutter run
+
+```
+
+## 🔧 ConfigurationSee [`docs/README_FLUTTER_SETUP.md`](docs/README_FLUTTER_SETUP.md) for detailed setup.
+
+
+
+Edit `lib/config.dart` for API endpoints:### ML Models (Basic)
+
+- Code Similarity: `http://10.0.2.2:5000````bash
+
+- Code Corruptor: `http://10.0.2.2:5001`pip install -r requirements.txt
+
+```
+
+## 🛠️ Development
+
+### Deep Learning (Code Corruptor)
+
+```bash```bash
+
+# Flutter developmentpip install -r requirements_dl.txt
+
+flutter runcd ml_models\code_corruptor
+
+python train.py
+
+# Start ML backend (separate terminals)```
+
+cd ml_models/code_similarity && python api.py
+
+cd ml_models/code_corruptor && python api.py## 🎮 Interactive Menu
+
+``````bash
+
+ml_menu.bat
+
+## 📱 Platforms```
+
+Provides easy access to:
+
+✅ Android • iOS • Web • Windows • Linux • macOS- Train models
+
+- Start APIs
+- View documentation
+- Navigate directories
+
+## 🔗 Quick Commands
+
+### Train Skill Classifier
+```bash
+cd ml_models\skill_classifier
+python train.py
+```
+
+### Run Code Similarity API
+```bash
+cd ml_models\code_similarity
+python api.py
+```
+
+### Train Code Corruptor (Deep Learning)
+```bash
+cd ml_models\code_corruptor
+python train.py
+```
+
+## 📊 Features
+
+### Flutter App
+- 📱 Cross-platform (Android, iOS, Web, Desktop)
+- 🎓 Interactive coding challenges
+- 📈 Progress tracking
+- 🎯 Adaptive difficulty
+
+### ML Backend
+- 🤖 AI-powered code analysis
+- 🔍 Similarity scoring
+- 🐛 Automatic bug generation
+- 📊 Skill level prediction
+
+## 🏗️ Architecture
+
+```
+Flutter App (Dart)
+       ↓
+  HTTP APIs
+       ↓
+Python ML Services
+       ↓
+ML Models
+```
+
+Clean separation: Flutter communicates via REST APIs to Python ML backend.
+
+## 📖 Learn More
+
+- **[ML Models Overview](ml_models/README.md)** - Detailed model documentation
+- **[Flutter Services](lib/services/README.md)** - API integration guide
+- **[Organization Guide](docs/ML_ORGANIZATION.md)** - Complete organization details
+
+---
+
+**Need help?** Start with [`docs/START_HERE.txt`](docs/START_HERE.txt) or run `ml_menu.bat`
 
 ---
 

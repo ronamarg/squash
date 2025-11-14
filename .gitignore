@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# ML Models (too large for Git)
+ml_models/code_corruptor/code_corruptor_model/
+ml_models/code_corruptor/code_corruptor_model_final/
+ml_models/code_corruptor/archive/

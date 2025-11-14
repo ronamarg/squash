@@ -1,0 +1,141 @@
+SQUASH PROJECT - ORGANIZED DIRECTORY STRUCTURE
+═══════════════════════════════════════════════════════════════
+
+squash/
+│
+├── 📱 FLUTTER APP
+│   ├── lib/                          Flutter application code
+│   │   ├── main.dart
+│   │   ├── main_menu.dart
+│   │   ├── quiz_screen.dart
+│   │   ├── assessment_screen.dart
+│   │   ├── difficulty_screen.dart
+│   │   ├── onboarding_screen.dart
+│   │   └── services/
+│   │       └── code_scorer.dart      Code scoring service
+│   │
+│   ├── android/                      Android build files
+│   ├── ios/                          iOS build files
+│   ├── web/                          Web build files
+│   ├── windows/                      Windows build files
+│   ├── linux/                        Linux build files
+│   ├── macos/                        macOS build files
+│   ├── pubspec.yaml                  Flutter dependencies
+│   └── analysis_options.yaml         Dart analysis config
+│
+├── 🤖 MACHINE LEARNING MODELS
+│   ├── ml_models/
+│   │   │
+│   │   ├── skill_classifier/         Random Forest Proficiency Classifier
+│   │   │   ├── train.py              Training script
+│   │   │   ├── rf_model.joblib       ⭐ Trained model
+│   │   │   ├── README.md             Documentation
+│   │   │   └── __init__.py
+│   │   │
+│   │   ├── code_similarity/          Code Similarity Scorer
+│   │   │   ├── scorer.py             ⭐ Main algorithm
+│   │   │   ├── api.py                Flask REST API
+│   │   │   ├── scoring.py.bak        Backup version
+│   │   │   ├── README.md             Documentation
+│   │   │   └── __init__.py
+│   │   │
+│   │   ├── code_corruptor/           Deep Learning Bug Generator
+│   │   │   ├── train.py              Training script
+│   │   │   ├── infer.py              ⭐ Inference engine
+│   │   │   ├── evaluate.py           Model evaluation
+│   │   │   ├── analyze_data.py       Dataset analysis
+│   │   │   ├── api.py                Flask REST API
+│   │   │   ├── README.md             Documentation
+│   │   │   └── __init__.py
+│   │   │
+│   │   ├── shared/                   Shared Utilities
+│   │   │   ├── normalize_code.py     Code normalization
+│   │   │   └── __init__.py
+│   │   │
+│   │   ├── README.md                 ⭐ Models overview
+│   │   └── __init__.py
+│   │
+│   └── data/                         All Datasets
+│       │
+│       ├── raw/                      Original/Raw Data
+│       │   ├── initial_dataset.xlsx  Student code submissions
+│       │   └── code_corrupt/
+│       │       └── code_bug_fix_pairs.csv  (6,237 pairs)
+│       │
+│       └── processed/                Processed/Clean Data
+│           ├── master_dataset.csv    Normalized codes
+│           └── final_dataset.csv     Scored dataset
+│
+├── 📚 DOCUMENTATION
+│   ├── README.md                     Main project README
+│   ├── ML_ORGANIZATION.md            ⭐ This organization guide
+│   ├── CODE_CORRUPTION_GUIDE.md      Deep learning guide
+│   ├── CODE_CORRUPTOR_README.md      Corruptor overview
+│   └── QUICK_REFERENCE.txt           Quick reference card
+│
+├── ⚙️ CONFIGURATION
+│   ├── requirements.txt              Basic ML dependencies
+│   ├── requirements_dl.txt           Deep learning dependencies
+│   ├── .gitignore                    Git ignore rules
+│   └── run_training.bat              Training automation script
+│
+└── 🔧 BUILD & MISC
+    ├── build/                        Build artifacts
+    ├── .dart_tool/                   Dart tools cache
+    ├── .venv/                        Python virtual env
+    └── .vscode/                      VS Code settings
+
+═══════════════════════════════════════════════════════════════
+
+🎯 QUICK ACCESS GUIDE
+
+┌─ Skill Classifier ────────────────────────────────────────┐
+│  Location:  ml_models/skill_classifier/                   │
+│  Train:     cd ml_models\skill_classifier && python train.py │
+│  Model:     rf_model.joblib                               │
+└────────────────────────────────────────────────────────────┘
+
+┌─ Code Similarity ─────────────────────────────────────────┐
+│  Location:  ml_models/code_similarity/                    │
+│  Use:       from ml_models.code_similarity.scorer import  │
+│  API:       cd ml_models\code_similarity && python api.py │
+└────────────────────────────────────────────────────────────┘
+
+┌─ Code Corruptor ──────────────────────────────────────────┐
+│  Location:  ml_models/code_corruptor/                     │
+│  Analyze:   cd ml_models\code_corruptor && python analyze_data.py │
+│  Train:     cd ml_models\code_corruptor && python train.py │
+│  Infer:     python infer.py --code "your code"            │
+│  API:       python api.py                                 │
+└────────────────────────────────────────────────────────────┘
+
+┌─ Data ────────────────────────────────────────────────────┐
+│  Raw:       data/raw/                                      │
+│  Processed: data/processed/                                │
+└────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+📊 MODELS SUMMARY
+
+┌──────────────────┬─────────────────┬────────────────────────┐
+│ Model            │ Type            │ Purpose                │
+├──────────────────┼─────────────────┼────────────────────────┤
+│ Skill Classifier │ Random Forest   │ Classify proficiency   │
+│ Code Similarity  │ Custom Algo     │ Score code similarity  │
+│ Code Corruptor   │ CodeT5 (220M)   │ Generate buggy code    │
+└──────────────────┴─────────────────┴────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+
+✅ ORGANIZATION BENEFITS
+
+  ✓ Clear separation of concerns
+  ✓ Easy to navigate and find files
+  ✓ Scalable for new models
+  ✓ Self-documenting structure
+  ✓ Data organized: raw vs processed
+  ✓ Version control friendly
+  ✓ Professional structure
+
+═══════════════════════════════════════════════════════════════

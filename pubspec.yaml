@@ -12,9 +12,10 @@ dependencies:
     sdk: flutter
   audioplayers: ^6.0.0
   cupertino_icons: ^1.0.8
+  shared_preferences: ^2.1.1
 
   # ADDED: Package required for making API calls to your scoring service
-  http: ^0.13.6 
+  http: ^0.13.6
 
 dev_dependencies:
   flutter_test:
