@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'code_fix_quiz_screen.dart';
 import 'user_profile_screen.dart';
+import 'lessons_screen.dart';
+import 'run_code_screen.dart';
 
 class MainMenuScreen extends StatelessWidget {
   final String level;
@@ -15,15 +17,20 @@ class MainMenuScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFBF5),
       appBar: AppBar(
-        title: Image.asset(
-          '_img/iconSqTEXT.png',
-          height: 40,
-          fit: BoxFit.contain,
-        ),
+        // Text title instead of logo
         backgroundColor: const Color(0xFFFF8A3D),
         elevation: 0,
         automaticallyImplyLeading: false,
         centerTitle: true,
+        title: const Text(
+          'Squash',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 1.2,
+            color: Colors.white,
+          ),
+        ),
         actions: [
           // User profile icon
           Padding(
@@ -68,18 +75,7 @@ class MainMenuScreen extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                // Logo at the top - larger size
-                Center(
-                  child: Hero(
-                    tag: 'app_logo',
-                    child: Image.asset(
-                      '_img/iconSqTEXT.png',
-                      height: 160,
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 40),
+
                 
                 // User level card
                 Container(
@@ -184,6 +180,86 @@ class MainMenuScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
+            // Lessons button
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFFFFB366),
+                    Color(0xFFFF8A3D),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF8A3D).withValues(alpha: 0.3),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  minimumSize: const Size.fromHeight(60),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => LessonsScreen(),
+                  ));
+                },
+                icon: const Icon(Icons.menu_book, size: 26),
+                label: const Text(
+                  'Lessons',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            // Run Code button
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFFFFD08A),
+                    Color(0xFFFFA34D),
+                  ],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFFF8A3D).withValues(alpha: 0.3),
+                    blurRadius: 14,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  minimumSize: const Size.fromHeight(60),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.of(context).push(MaterialPageRoute(
+                    builder: (_) => RunCodeScreen(),
+                  ));
+                },
+                icon: const Icon(Icons.play_arrow, size: 26),
+                label: const Text(
+                  'Run Code',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            const SizedBox(height: 28),
             
             // Info text
             Text(

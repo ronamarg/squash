@@ -3,9 +3,10 @@
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-import '../config.dart';
+import '../config/config.dart';
 
 class CodeCorruptorService {
   final String baseUrl;
@@ -18,7 +19,7 @@ class CodeCorruptorService {
       final response = await http.get(Uri.parse('$baseUrl/health'));
       return response.statusCode == 200;
     } catch (e) {
-      print('Health check failed: $e');
+      debugPrint('Health check failed: $e');
       return false;
     }
   }
@@ -48,11 +49,11 @@ class CodeCorruptorService {
         final data = jsonDecode(response.body);
         return CodeCorruptionResult.fromJson(data);
       } else {
-        print('Error: ${response.statusCode} - ${response.body}');
+        debugPrint('Error: ${response.statusCode} - ${response.body}');
         return null;
       }
     } catch (e) {
-      print('Failed to corrupt code: $e');
+      debugPrint('Failed to corrupt code: $e');
       return null;
     }
   }
@@ -78,11 +79,11 @@ class CodeCorruptorService {
         final data = jsonDecode(response.body);
         return QuizQuestion.fromJson(data);
       } else {
-        print('Error: ${response.statusCode} - ${response.body}');
+        debugPrint('Error: ${response.statusCode} - ${response.body}');
         return null;
       }
     } catch (e) {
-      print('Failed to generate quiz: $e');
+      debugPrint('Failed to generate quiz: $e');
       return null;
     }
   }
@@ -109,11 +110,11 @@ class CodeCorruptorService {
             .map((r) => BatchCorruptionResult.fromJson(r))
             .toList();
       } else {
-        print('Error: ${response.statusCode} - ${response.body}');
+        debugPrint('Error: ${response.statusCode} - ${response.body}');
         return [];
       }
     } catch (e) {
-      print('Failed to batch corrupt: $e');
+      debugPrint('Failed to batch corrupt: $e');
       return [];
     }
   }
@@ -225,8 +226,8 @@ def factorial(n):
       // Display quiz.buggyCode to user
       // User attempts to fix it
       // Compare their fix to quiz.correctCode
-      print('Quiz question: ${quiz.question}');
-      print('Buggy code: ${quiz.buggyCode}');
+      debugPrint('Quiz question: ${quiz.question}');
+      debugPrint('Buggy code: ${quiz.buggyCode}');
       // ... rest of your quiz logic
     }
   }
@@ -243,8 +244,10 @@ def factorial(n):
     if (result != null && result.success) {
       // Pick one randomly or show all variants
       final bugs = result.allCorruptions;
-      print('Generated ${bugs.length} buggy versions');
-      bugs.forEach((bug) => print('- $bug'));
+      debugPrint('Generated ${bugs.length} buggy versions');
+      for (var bug in bugs) {
+        debugPrint('- $bug');
+      }
     }
   }
 }

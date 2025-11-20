@@ -144,7 +144,6 @@ class FirebaseService {
         progressionValue: 0,
         joinDate: now,
         lastLogin: now,
-        progressionScore: 0,
         totalQuizzesTaken: 0,
         totalScore: 0,
       );
@@ -169,7 +168,6 @@ class FirebaseService {
         progressionValue: 0,
         joinDate: now,
         lastLogin: now,
-        progressionScore: 0,
         totalQuizzesTaken: 0,
         totalScore: 0,
       );

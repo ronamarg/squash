@@ -48,4 +48,4 @@ app.*.map.json
 ml_models/code_corruptor/
 
 # Environment configuration (contains API keys and secrets)
-lib/env_config.dart
+lib/config/env_config.dart

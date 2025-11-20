@@ -9,7 +9,6 @@ class UserModel {
   final int progressionValue; // Updated after each practice run
   final DateTime joinDate;
   final DateTime lastLogin;
-  final int progressionScore; // Updated every session
   final int totalQuizzesTaken; // For statistics
   final int totalScore; // For statistics
 
@@ -22,7 +21,6 @@ class UserModel {
     this.progressionValue = 0,
     required this.joinDate,
     required this.lastLogin,
-    this.progressionScore = 0,
     this.totalQuizzesTaken = 0,
     this.totalScore = 0,
   });
@@ -38,7 +36,6 @@ class UserModel {
       'progressionValue': progressionValue,
       'joinDate': Timestamp.fromDate(joinDate),
       'lastLogin': Timestamp.fromDate(lastLogin),
-      'progressionScore': progressionScore,
       'totalQuizzesTaken': totalQuizzesTaken,
       'totalScore': totalScore,
     };
@@ -55,7 +52,6 @@ class UserModel {
       progressionValue: map['progressionValue'] ?? 0,
       joinDate: (map['joinDate'] ?? map['createdAt'] ?? Timestamp.now()).toDate(),
       lastLogin: (map['lastLogin'] ?? Timestamp.now()).toDate(),
-      progressionScore: map['progressionScore'] ?? 0,
       totalQuizzesTaken: map['totalQuizzesTaken'] ?? 0,
       totalScore: map['totalScore'] ?? 0,
     );
@@ -71,7 +67,6 @@ class UserModel {
     int? progressionValue,
     DateTime? joinDate,
     DateTime? lastLogin,
-    int? progressionScore,
     int? totalQuizzesTaken,
     int? totalScore,
   }) {
@@ -84,7 +79,6 @@ class UserModel {
       progressionValue: progressionValue ?? this.progressionValue,
       joinDate: joinDate ?? this.joinDate,
       lastLogin: lastLogin ?? this.lastLogin,
-      progressionScore: progressionScore ?? this.progressionScore,
       totalQuizzesTaken: totalQuizzesTaken ?? this.totalQuizzesTaken,
       totalScore: totalScore ?? this.totalScore,
     );

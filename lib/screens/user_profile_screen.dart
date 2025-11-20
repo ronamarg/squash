@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'services/firebase_service.dart';
-import 'models/user_model.dart';
-import 'auth_screen.dart';
+import '../services/firebase_service.dart';
+import '../models/user_model.dart';
+import '../main.dart'; // For AuthWrapper after logout
 import 'assessment_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
@@ -60,9 +60,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
       try {
         await _firebaseService.signOut();
         if (mounted) {
-          // Navigate to auth screen and remove all previous routes
+          // Return to AuthWrapper so the auth state stream drives navigation
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const AuthScreen()),
+            MaterialPageRoute(builder: (_) => const AuthWrapper()),
             (route) => false,
           );
         }
@@ -148,14 +148,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         '${_userData!.progressionValue}',
                         Icons.code,
                         Colors.teal,
-                      ),
-                      const SizedBox(height: 16),
-
-                      _buildStatsCard(
-                        'Progression Score',
-                        '${_userData!.progressionScore}',
-                        Icons.trending_up,
-                        Colors.green,
                       ),
                       const SizedBox(height: 16),
 

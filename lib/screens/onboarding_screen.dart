@@ -5,10 +5,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'assessment_screen.dart';
-import 'config.dart';
+import '../config/config.dart';
 import 'difficulty_screen.dart';
 import 'main_menu.dart';
-import 'services/firebase_service.dart';
+import '../services/firebase_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -70,9 +70,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final url = Uri.parse('${Config.apiBase}/predict_level');
     String determinedLevel = 'novice';
     try {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Assessing level...'), duration: Duration(seconds: 2)),
-      );
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
@@ -83,11 +80,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           final result = json.decode(response.body);
           determinedLevel = (result['level'] ?? 'novice').toString().toLowerCase();
         } catch (e) {
-          print('Failed to decode prediction response: $e');
+          debugPrint('Failed to decode prediction response: $e');
         }
       }
     } catch (e) {
-      print('Network Error: $e');
+      debugPrint('Network Error: $e');
     }
     
     // Save to SharedPreferences for backward compatibility
@@ -101,7 +98,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       try {
         await firebaseService.updateSkillClassification(currentUser.uid, determinedLevel);
       } catch (e) {
-        print('Error saving skill classification to Firebase: $e');
+        debugPrint('Error saving skill classification to Firebase: $e');
       }
     }
     
@@ -127,17 +124,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildPage(Map<String, String> data) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Logo at the top - larger size
-          Image.asset(
-            '_img/iconSqTEXT.png',
-            height: 180,
-            fit: BoxFit.contain,
-          ),
-          const SizedBox(height: 48),
           Icon(Icons.school, size: 80, color: Colors.orange.shade300),
           const SizedBox(height: 32),
           Text(
@@ -170,21 +160,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final randomizedOptions = _getRandomizedOptions(q);
     
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 48.0),
+      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
+          // Persistent top logo (same style as onboarding pages)
+          Image.asset(
+            '_img/iconSqTEXT.png',
+            height: 120,
+            fit: BoxFit.contain,
+          ),
+          const SizedBox(height: 24),
           Text(
             'Proficiency Assessment',
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.orange),
+            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.orange),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
           Text(
             q['question'],
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+              height: 1.3,
+            ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           ...List.generate(randomizedOptions.length, (i) {
             final opt = randomizedOptions[i];
             return Padding(
@@ -213,10 +215,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     try {
                       _classifyUser();
                     } catch (e) {
-                      print('Error classifying user: $e');
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Assessment failed. Try again.'), duration: Duration(seconds: 2)),
-                      );
+                      debugPrint('Error classifying user: $e');
+                      // Removed SnackBar to avoid covering bottom controls
                     }
                   }
                 },
@@ -241,21 +241,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFFBF5),
-      appBar: AppBar(
-        title: Image.asset(
-          '_img/iconSqTEXT.png',
-          height: 40,
-          fit: BoxFit.contain,
-        ),
-        backgroundColor: const Color(0xFFFF8A3D),
-        elevation: 0,
-        centerTitle: true,
-      ),
       body: SafeArea(
         child: _showAssessment
             ? _buildAssessment()
             : Column(
                 children: [
+                  const SizedBox(height: 16),
+                  // Persistent logo at top so page text centers vertically beneath it
+                  Image.asset(
+                    '_img/iconSqTEXT.png',
+                    height: 140,
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 8),
                   Expanded(
                     child: PageView.builder(
                       controller: _controller,
@@ -303,16 +301,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   FocusScope.of(context).unfocus();
                                 } catch (_) {}
                                 Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AssessmentScreen()));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Starting assessment...'), duration: Duration(seconds: 1)),
-                              );
+                              // Removed SnackBar (Starting assessment)
                               // ignore: avoid_print
                               print('Onboarding: Start Assessment pressed (navigated to AssessmentScreen)');
                             } else {
                               _controller.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Next page'), duration: Duration(milliseconds: 600)),
-                              );
+                              // Removed SnackBar (Next page)
                               // ignore: avoid_print
                               print('Onboarding: Next pressed, moving to page ${_page + 1}');
                             }

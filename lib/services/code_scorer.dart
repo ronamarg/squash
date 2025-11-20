@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../config.dart';
+import 'package:flutter/foundation.dart';
+import '../config/config.dart';
 
 class CodeScorer {
   static Future<double> scoreCode(String studentCode, String correctCode) async {
@@ -20,7 +21,7 @@ class CodeScorer {
         return (data['score'] as num).toDouble();
       }
     } catch (e) {
-      print('Error scoring code: $e');
+      debugPrint('Error scoring code: $e');
     }
     return 0.0; // Return 0 score on error
   }
