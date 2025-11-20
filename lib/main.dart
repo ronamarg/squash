@@ -3,10 +3,10 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 
-import 'auth_screen.dart';
-import 'onboarding_screen.dart';
-import 'main_menu.dart';
-import 'difficulty_screen.dart';
+import 'screens/auth_screen.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/main_menu.dart';
+import 'screens/difficulty_screen.dart';
 import 'services/firebase_service.dart';
 import 'models/user_model.dart'; 
  

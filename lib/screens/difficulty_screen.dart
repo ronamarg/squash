@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 // NOTE: Use the correct IP address for your running Flask service
-import 'config.dart';
+import '../config/config.dart';
 import 'quiz_screen.dart';
 // Build the full endpoint at runtime (const concatenation with static const is okay)
 final String _apiUrl = '${Config.apiBase}/predict_level';
@@ -109,13 +109,13 @@ class DifficultyScreen extends StatelessWidget {
       if (response.statusCode == 200) {
         final result = json.decode(response.body);
         determinedLevel = result['level'] ?? 'novice';
-        print('API Predicted Level: $determinedLevel');
+        debugPrint('API Predicted Level: $determinedLevel');
         
       } else {
-        print('API Failed. Status: ${response.statusCode}. Defaulting to novice.');
+        debugPrint('API Failed. Status: ${response.statusCode}. Defaulting to novice.');
       }
     } catch (e) {
-      print('Network Error: Could not reach scoring service. Defaulting to novice. Error: $e');
+      debugPrint('Network Error: Could not reach scoring service. Defaulting to novice. Error: $e');
     }
 
     // --- FINAL FIX: Navigate to the FULL QUIZ using the determined level ---

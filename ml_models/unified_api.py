@@ -10,6 +10,8 @@ import sys
 import re
 import ast
 import random
+import subprocess
+import tempfile
 from difflib import SequenceMatcher
 from typing import List
 
@@ -51,9 +53,76 @@ def health():
         'services': {
             'skill_classifier': skill_model is not None,
             'code_corruptor': code_corruptor is not None,
-            'code_similarity': True
+            'code_similarity': True,
+            'code_execution': True
         }
     })
+
+# ============================================================================
+# CODE EXECUTION ENDPOINT
+# ============================================================================
+@app.route('/run_code', methods=['POST'])
+def run_code():
+    """Execute Python code safely with timeout and capture output"""
+    try:
+        data = request.get_json()
+        code = data.get('code', '')
+        language = data.get('language', 'python').lower()
+        timeout_seconds = data.get('timeout', 5)
+        
+        if not code:
+            return jsonify({'error': 'No code provided', 'success': False}), 400
+        
+        if language != 'python':
+            return jsonify({'error': 'Only Python is supported', 'success': False}), 400
+        
+        # Create temporary file for code execution
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.py', delete=False, encoding='utf-8') as f:
+            f.write(code)
+            temp_file = f.name
+        
+        try:
+            # Execute code in subprocess with timeout
+            result = subprocess.run(
+                [sys.executable, temp_file],
+                capture_output=True,
+                text=True,
+                timeout=timeout_seconds,
+                cwd=os.path.dirname(temp_file)
+            )
+            
+            return jsonify({
+                'stdout': result.stdout,
+                'stderr': result.stderr,
+                'returncode': result.returncode,
+                'success': result.returncode == 0,
+                'timed_out': False
+            })
+            
+        except subprocess.TimeoutExpired:
+            return jsonify({
+                'stdout': '',
+                'stderr': f'Execution timed out after {timeout_seconds} seconds',
+                'returncode': -1,
+                'success': False,
+                'timed_out': True
+            })
+        
+        finally:
+            # Clean up temp file
+            try:
+                os.unlink(temp_file)
+            except:
+                pass
+                
+    except Exception as e:
+        return jsonify({
+            'stdout': '',
+            'stderr': f'Server error: {str(e)}',
+            'returncode': -1,
+            'success': False,
+            'error': str(e)
+        }), 500
 
 # ============================================================================
 # SKILL CLASSIFIER ENDPOINTS
@@ -382,6 +451,8 @@ if __name__ == '__main__':
     print("="*60)
     print("\nEndpoints:")
     print("  GET  /health           - Health check")
+    print("\n  Code Execution:")
+    print("    POST /run_code       - Execute Python code safely")
     print("\n  Skill Classifier:")
     print("    POST /predict_level  - Classify user skill level")
     print("\n  Code Corruptor:")

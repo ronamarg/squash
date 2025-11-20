@@ -4,8 +4,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'config.dart';
-import 'services/firebase_service.dart';
+import '../config/config.dart';
+import '../services/firebase_service.dart';
 
 class CodeFixQuizScreen extends StatefulWidget {
   final String difficulty;
@@ -128,8 +128,10 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
           try {
             progressionDelta = similarity - 80;
             progressionValue = await _firebaseService.updateProgressionValue(user.uid, similarity);
+            // Update quiz statistics
+            await _firebaseService.updateQuizStats(user.uid, similarity);
           } catch (e) {
-            debugPrint('Error updating progression value: $e');
+            debugPrint('Error updating user stats: $e');
           }
         }
 

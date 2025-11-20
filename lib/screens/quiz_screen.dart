@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'config.dart';
+import '../config/config.dart';
 
 // Define a type for your question data for clarity
 typedef QuestionData = List<Map<String, dynamic>>;
@@ -248,7 +248,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                   final response = await http.post(
                                     url,
                                     headers: {'Content-Type': 'application/json'},
-                                    body: '{"student_code": "${userCode.replaceAll('"', '\"')}", "correct_code": "${correctCode.replaceAll('"', '\"')}"}',
+                                    body: '{"student_code": "${userCode.replaceAll('"', '\\"')}", "correct_code": "${correctCode.replaceAll('"', '\\"')}"}',
                                   );
                                   int scoreValue = 0;
                                   if (response.statusCode == 200) {
@@ -257,6 +257,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                       scoreValue = int.parse(RegExp(r'\d+').stringMatch(result) ?? '0');
                                     } catch (_) {}
                                   }
+                                  if (!mounted) return;
                                   showDialog(
                                     context: context,
                                     builder: (_) => AlertDialog(
@@ -294,7 +295,7 @@ class _QuizScreenState extends State<QuizScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.orange.withOpacity(0.3),
+                                        color: Colors.orange.withValues(alpha: 0.3),
                                         spreadRadius: 1,
                                         blurRadius: 3,
                                         offset: const Offset(0, 2),
