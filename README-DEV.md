@@ -100,7 +100,7 @@ squash/
 ├── ENV_SETUP.md          # Environment guide
 ├── README.md             # User-facing overview
 ├── README-DEV.md         # This file
-└── requirements*.txt     # Python dependency sets
+└── requirements.txt      # Python dependencies (all ML models)
 ```
 
 ---
@@ -160,7 +160,7 @@ curl -X POST http://127.0.0.1:5000/score \
 1. Create directory `ml_models/<model_name>/`.
 2. Add `README.md` (purpose, usage, training).
 3. Update `ml_models/README.md` table.
-4. Add dependencies to `requirements.txt` or `requirements_dl.txt`.
+4. Add dependencies to `requirements.txt`.
 5. Provide API (`api.py`) if needed by Flutter.
 
 ---
