@@ -23,8 +23,7 @@ Central index for extended project and ML documentation. This file is intentiona
 - Processed datasets: `../data/processed/`
 
 ## Dependency Manifests
-- Basic ML deps: `../requirements.txt`
-- Deep learning deps: `../requirements_dl.txt`
+- All Python deps (ML + DL): `../requirements.txt`
 
 ## Adding New Docs
 1. Place new detailed guide in `docs/`.

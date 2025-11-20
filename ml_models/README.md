@@ -157,15 +157,12 @@ python analyze_data.py
 
 ## Dependencies
 
-### Basic ML (Skill Classifier, Similarity)
+All ML models (basic + deep learning):
 ```bash
 pip install -r requirements.txt
 ```
 
-### Deep Learning (Code Corruptor)
-```bash
-pip install -r requirements_dl.txt
-```
+Note: Includes sklearn for classifiers, Flask for APIs, and PyTorch/Transformers for code corruptor.
 
 ---
 
