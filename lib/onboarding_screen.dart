@@ -8,6 +8,7 @@ import 'assessment_screen.dart';
 import 'config.dart';
 import 'difficulty_screen.dart';
 import 'main_menu.dart';
+import 'services/firebase_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -88,8 +89,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     } catch (e) {
       print('Network Error: $e');
     }
+    
+    // Save to SharedPreferences for backward compatibility
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboardingSeen', true);
+    
+    // Save user skill classification to Firebase
+    final firebaseService = FirebaseService();
+    final currentUser = firebaseService.currentUser;
+    if (currentUser != null) {
+      try {
+        await firebaseService.updateSkillClassification(currentUser.uid, determinedLevel);
+      } catch (e) {
+        print('Error saving skill classification to Firebase: $e');
+      }
+    }
+    
     if (!mounted) return;
 
     // Navigate directly to the quiz for the determined level (fallback to novice)
@@ -225,13 +240,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFBF5),
       appBar: AppBar(
         title: Image.asset(
           '_img/iconSqTEXT.png',
           height: 40,
           fit: BoxFit.contain,
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: const Color(0xFFFF8A3D),
+        elevation: 0,
         centerTitle: true,
       ),
       body: SafeArea(
@@ -261,7 +278,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               } catch (_) {}
                               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AssessmentScreen()));
                           },
-                          child: const Text('Skip', style: TextStyle(color: Colors.orange)),
+                          child: const Text('Skip', style: TextStyle(color: Color(0xFFFF8A3D), fontWeight: FontWeight.w600)),
                         ),
                         Row(
                           children: List.generate(
@@ -300,7 +317,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               print('Onboarding: Next pressed, moving to page ${_page + 1}');
                             }
                           },
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFFF8A3D),
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
                           child: Text(_page == _pages.length - 1 ? 'Start Assessment' : 'Next'),
                         ),
                       ],

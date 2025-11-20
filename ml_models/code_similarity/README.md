@@ -1,5 +1,7 @@
 # Code Similarity Scorer
 
+For global setup and environment configuration see `../../README-DEV.md`; this file documents the scorer itself.
+
 Advanced code similarity algorithm that compares student code to canonical solutions.
 
 ## Algorithm Features

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'config.dart';
+import 'services/firebase_service.dart';
 
 class CodeFixQuizScreen extends StatefulWidget {
   final String difficulty;
@@ -16,6 +17,7 @@ class CodeFixQuizScreen extends StatefulWidget {
 }
 
 class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
+  final FirebaseService _firebaseService = FirebaseService();
   bool _loading = true;
   String? _error;
   
@@ -29,6 +31,8 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
   int? _currentScore;
   String? _feedback;
   String? _validationError;
+  int? _latestProgressionValue;
+  int? _latestProgressionDelta;
 
   @override
   void initState() {
@@ -43,6 +47,8 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
   }
 
   Future<void> _loadQuestion() async {
+    if (!mounted) return;
+    
     setState(() {
       _loading = true;
       _error = null;
@@ -50,6 +56,8 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
       _currentScore = null;
       _feedback = null;
       _validationError = null;
+      _latestProgressionDelta = null;
+      _latestProgressionValue = null;
     });
 
     try {
@@ -65,6 +73,7 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
 
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
+        if (!mounted) return;
         setState(() {
           _originalCode = data['original_code'] ?? '';
           _buggyCode = data['corrupted_code'] ?? '';
@@ -75,6 +84,7 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
         throw Exception('API returned ${resp.statusCode}');
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _error = 'Failed to load question: $e';
         _loading = false;
@@ -110,15 +120,28 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
       if (resp.statusCode == 200) {
         final data = json.decode(resp.body);
         final similarity = (data['similarity'] ?? 0) as int;
-        
+
+        int? progressionDelta;
+        int? progressionValue;
+        final user = _firebaseService.currentUser;
+        if (user != null) {
+          try {
+            progressionDelta = similarity - 80;
+            progressionValue = await _firebaseService.updateProgressionValue(user.uid, similarity);
+          } catch (e) {
+            debugPrint('Error updating progression value: $e');
+          }
+        }
+
         setState(() {
           _currentScore = similarity;
           _questionsAnswered++;
           _score += similarity;
           _showingResult = true;
           _loading = false;
-          
-          // Generate feedback
+          _latestProgressionDelta = progressionDelta;
+          _latestProgressionValue = progressionValue;
+
           if (similarity >= 90) {
             _feedback = 'Excellent! Your code is nearly perfect.';
           } else if (similarity >= 70) {
@@ -147,21 +170,30 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: const Color(0xFFFFFBF5),
       appBar: AppBar(
         title: Image.asset(
           '_img/iconSqTEXT.png',
           height: 40,
           fit: BoxFit.contain,
         ),
-        backgroundColor: Colors.orange,
+        backgroundColor: const Color(0xFFFF8A3D),
+        elevation: 0,
         centerTitle: true,
         actions: [
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Center(
-              child: Text(
-                'Score: ${_questionsAnswered > 0 ? (_score ~/ _questionsAnswered) : 0}/100',
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Score: ${_questionsAnswered > 0 ? (_score ~/ _questionsAnswered) : 0}/100',
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white),
+                ),
               ),
             ),
           ),
@@ -188,47 +220,104 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Card(
-                        color: Colors.orange.shade50,
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Fix the buggy code below:',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Difficulty: ${widget.difficulty}',
-                                style: TextStyle(
-                                  color: Colors.grey.shade700,
-                                  fontSize: 14,
-                                ),
-                              ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFFFF8A3D).withValues(alpha: 0.1),
+                              const Color(0xFFFFB366).withValues(alpha: 0.05),
                             ],
                           ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.04),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFF8A3D),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: const Icon(Icons.bug_report, color: Colors.white, size: 20),
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Text(
+                                    'Fix the buggy code below:',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Color(0xFF2D2D2D),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                'Difficulty: ${widget.difficulty.toUpperCase()}',
+                                style: const TextStyle(
+                                  color: Color(0xFFFF8A3D),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _answerController,
-                        maxLines: 15,
-                        style: const TextStyle(
-                          fontFamily: 'monospace',
-                          fontSize: 14,
+                      const SizedBox(height: 20),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.06),
+                              blurRadius: 12,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                        decoration: InputDecoration(
-                          hintText: 'Edit the code here...',
-                          border: const OutlineInputBorder(),
-                          filled: true,
-                          fillColor: Colors.grey.shade100,
+                        child: TextField(
+                          controller: _answerController,
+                          maxLines: 15,
+                          style: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                          decoration: InputDecoration(
+                            hintText: 'Edit the code here...',
+                            hintStyle: TextStyle(color: Colors.grey.shade400),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide.none,
+                            ),
+                            filled: true,
+                            fillColor: const Color(0xFFF8F9FA),
+                            contentPadding: const EdgeInsets.all(16),
+                          ),
+                          enabled: !_showingResult,
                         ),
-                        enabled: !_showingResult,
                       ),
                       const SizedBox(height: 16),
                       if (_showingResult) ...[
@@ -256,6 +345,25 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(fontSize: 16),
                                 ),
+                                if (_latestProgressionDelta != null && _latestProgressionValue != null) ...[
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.code, size: 18),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        'Practice progression ${_latestProgressionDelta! >= 0 ? '+' : ''}${_latestProgressionDelta!} → ${_latestProgressionValue!}',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: _latestProgressionDelta! >= 0
+                                              ? Colors.green.shade700
+                                              : Colors.red.shade700,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                                 const SizedBox(height: 16),
                                 const Divider(),
                                 const SizedBox(height: 8),
