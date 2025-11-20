@@ -1,6 +1,6 @@
 # ML Models Directory Structure
 
-This directory contains all machine learning models and algorithms for the Squash coding education app.
+High-level reference for all ML components. For environment, workflow, or contribution details see `../README-DEV.md`. For app overview see `../README.md`.
 
 ## 📁 Directory Structure
 
@@ -12,7 +12,7 @@ ml_models/
 └── shared/               # Shared utilities across models
 ```
 
-## 🎯 Models Overview
+## Model Overview
 
 ### 1. Skill Classifier (`skill_classifier/`)
 **Purpose:** Classify student proficiency level based on code quality metrics
@@ -127,7 +127,7 @@ normalized = normalize_code(raw_code)
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Run Skill Classifier
 ```bash
@@ -155,7 +155,7 @@ python analyze_data.py
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 ### Basic ML (Skill Classifier, Similarity)
 ```bash

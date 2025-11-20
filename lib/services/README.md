@@ -1,5 +1,7 @@
 # Flutter Services - API Integration Guide
 
+For overall environment and branching workflow see `../../README-DEV.md`. This file focuses only on Dart ↔ ML API interaction.
+
 ## Overview
 
 The Flutter app communicates with Python ML models through REST APIs. The directory reorganization does NOT affect the app since it only changed Python file locations, not API endpoints.
@@ -77,15 +79,16 @@ final quiz = await service.generateQuiz(
 
 ## Configuration
 
-All API URLs are configured in `lib/config.dart`:
+All API base URLs are ultimately sourced from `EnvConfig` (see `../env_config.example.dart`) via a `Config` indirection. Example (simplified):
 
 ```dart
 class Config {
-  static const String similarityApiBase = 'http://10.0.2.2:5000';
-  static const String corruptorApiBase = 'http://10.0.2.2:5001';
-  static const String skillApiBase = 'http://10.0.2.2:5002';
+  static String get similarityApiBase => EnvConfig.similarityBase;
+  static String get corruptorApiBase  => EnvConfig.corruptorBase;
+  static String get skillApiBase      => EnvConfig.skillBase; // future
 }
 ```
+Never hard‑code secrets or internal hosts directly here; update `EnvConfig` locally.
 
 ### For Different Platforms:
 - **Android Emulator:** `http://10.0.2.2:PORT`
@@ -112,12 +115,7 @@ python api.py
 ```
 
 ### Terminal 3 - Skill Classifier (Port 5002)
-```bash
-cd ml_models\skill_classifier
-# TODO: Create api.py
-set PORT=5002
-python api.py
-```
+API server pending implementation (`ml_models/skill_classifier/api.py`). Once added, run similarly and add a Dart service.
 
 ---
 

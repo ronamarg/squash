@@ -1,5 +1,7 @@
 # Code Corruptor V3 - What Is This?
 
+Environment/developer workflow lives in `../../README-DEV.md`. This README focuses on corruption model behavior.
+
 ## The Model
 
 This is a deep learning model that **takes correct Python code and intentionally breaks it** to create realistic bugs for educational purposes. You give it working code, it returns buggy code.
@@ -75,7 +77,7 @@ Shows 19 different code examples from simple to complex, each corrupted with log
 
 - **3-5 passes**: Makes 3 to 5 independent corruption attempts on the code
 - **Temperature 1.5**: Controls randomness (higher = more creative/varied bugs)
-- **Always "advanced" mode**: Uses the harder setting for better results
+
 
 ## Performance
 

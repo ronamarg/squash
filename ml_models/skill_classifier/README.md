@@ -1,5 +1,7 @@
 # Random Forest Skill Classifier
 
+General environment & workflow: see `../../README-DEV.md`. This README focuses on model specifics.
+
 Classifies student programming proficiency level based on code quality metrics.
 
 ## Model Details

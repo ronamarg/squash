@@ -12,15 +12,6 @@ Key Improvements in V3.0:
 - **No Rule-Based Logic**: Model does the heavy lifting
 - **Better Error Variety**: Operator swaps, off-by-one, wrong variables, etc.
 
-What the Model Learned:
------------------------
-✅ Syntax errors (missing colons, indentation)
-✅ Operator swaps (>, <, +, -, and, or)
-✅ Off-by-one errors (range, indexing)
-✅ Wrong variables (return wrong var)
-✅ Wrong returns (True → False)
-✅ Infinite loops (missing i += 1)
-✅ Missing initialization
 
 It learned from 1500 examples of:
 - 1000 syntax errors
@@ -28,31 +19,20 @@ It learned from 1500 examples of:
 
 The model naturally generates realistic bugs without needing complex rules.
 
-Quick Start:
------------
-```python
-from revertV3 import RevertV3
-
-# Initialize (beginner or advanced)
-corruptor = RevertV3(difficulty='beginner')
-
-# Corrupt code - model does everything!
-buggy_code = corruptor.corrupt(original_code)
-```
-
 Author: Mao Abel
 Version: 3.0
 """
 
 import random
+import os
 from typing import Dict
 
 
 class RevertV3:
     """
-    RevertV3.0 - Enhanced T5 Model Code Corruptor
-    
-    Simplified to 2 difficulty levels with T5 doing all the work:
+    RevertV3.0
+
+Guides to setting difficulty:
     
     BEGINNER (Focus: Logic-First):
     - 1-2 corruption passes (lighter)
@@ -69,7 +49,7 @@ class RevertV3:
     Key Philosophy:
     --------------
     The enhanced T5 model learned from 1500 bug examples including:
-    - Operator swaps (>, <, +, -)
+    - Operator swaps (>, <, +, -)   
     - Off-by-one errors
     - Wrong variables/returns
     - Infinite loops
@@ -99,33 +79,21 @@ class RevertV3:
         Initialize RevertV3
         
         Args:
-            model_path: Path to trained T5 model
-            difficulty: 'beginner' or 'advanced'
-        """
-        # Convert relative path to absolute path
-        import os
-        if not os.path.isabs(model_path):
-            # Resolve relative to this file's directory
-            base_dir = os.path.dirname(os.path.abspath(__file__))
-            model_path = os.path.join(base_dir, model_path)
-        
-        self.model_path = model_path
-        self.difficulty = difficulty.lower()
-        self.t5_model = None  # Lazy load
-        """
-        Initialize RevertV3
-        
-        Args:
             model_path: Path to enhanced T5 model
             difficulty: Always uses 'advanced' settings (parameter kept for compatibility)
         """
         self.difficulty = 'advanced'  # Always use advanced
-        self.model_path = model_path
+        # Convert relative path to absolute path
+        if not os.path.isabs(model_path):
+            # Get the directory where this file (revertV3.py) is located
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            self.model_path = os.path.abspath(os.path.join(current_dir, model_path))
+        else:
+            self.model_path = model_path
         
-        # Always use advanced settings for better corruption
-        self.num_passes = random.randint(3, 5)  # 3-5 passes for more intense corruption
-        self.temperature = 1.5  # High for creative errors
-        self.length_penalty = 2.0  # Moderate length preservation
+        self.num_passes = random.randint(1, 2)  # 3-5 passes for more intense corruption
+        self.temperature = 0.6  # High for creative errors
+        self.length_penalty = 3  # Moderate length preservation
         
         # Lazy load T5 model
         self.t5_model = None
@@ -133,17 +101,9 @@ class RevertV3:
     def _load_t5_model(self):
         """Lazy load enhanced T5 model"""
         if self.t5_model is None:
-            import sys
-            import os
-            # Add code_corruptor directory to path so infer.py can be found
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            if current_dir not in sys.path:
-                sys.path.insert(0, current_dir)
-            
             from infer import CodeCorruptor
             print(f"Loading enhanced model from {self.model_path}...")
-            # Use local_files_only to prevent HuggingFace repo validation
-            self.t5_model = CodeCorruptor(self.model_path, device='cpu')  # Force CPU for compatibility
+            self.t5_model = CodeCorruptor(self.model_path)
             print("Model loaded!")
     
     def corrupt(self, code: str) -> str:
@@ -225,17 +185,17 @@ print('Maximum:', result)"""
         corruptor = RevertV3(difficulty=difficulty)
         result = corruptor.corrupt_verbose(code)
         
-        print(f"⚙️  Settings:")
+        print(f"  Settings:")
         print(f"  • Passes: {result['num_passes']}")
         print(f"  • Temperature: {result['temperature']}")
         print(f"  • Model: {result['model']}")
         print(f"  • Training: {result['training_data']}")
         
-        print("\n🔧 CORRUPTED CODE:")
+        print("\n CORRUPTED CODE:")
         print("-"*70)
         print(result['corrupted'])
     
     print("\n" + "="*70)
-    print("Done! 🎉")
+    print("Done")
     print("The model generates logic errors naturally!")
     print("="*70)

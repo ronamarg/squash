@@ -10,7 +10,7 @@ import '../config.dart';
 class CodeCorruptorService {
   final String baseUrl;
   
-  CodeCorruptorService({this.baseUrl = Config.corruptorApiBase});
+  CodeCorruptorService({String? baseUrl}) : baseUrl = baseUrl ?? Config.corruptorApiBase;
 
   /// Check if the API server is running
   Future<bool> healthCheck() async {
