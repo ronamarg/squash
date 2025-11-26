@@ -101,9 +101,9 @@ Guides to setting difficulty:
                 self.model_path = model_path
             self.use_hf = False
         
-        self.num_passes = random.randint(1, 2)  # 3-5 passes for more intense corruption
-        self.temperature = 0.6  # High for creative errors
-        self.length_penalty = 3  # Moderate length preservation
+        self.num_passes = 1  # Single pass for faster inference (was 1-2)
+        self.temperature = 0.8  # Moderate for good errors with less variance
+        self.length_penalty = 2.0  # Moderate length preservation
         
         # Lazy load T5 model
         self.t5_model = None

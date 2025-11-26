@@ -32,19 +32,42 @@ class CodeCorruptor:
             local_files_only=local_files_only,
             subfolder=subfolder
         )
+        
+        # Load model with optimizations
         self.model = AutoModelForSeq2SeqLM.from_pretrained(
             model_path, 
             local_files_only=local_files_only,
-            subfolder=subfolder
+            subfolder=subfolder,
+            torch_dtype=torch.float32  # Keep float32 for CPU
         ).to(self.device)
-        self.model.eval()
+        
+        # CPU-specific optimizations
+        if self.device.type == 'cpu':
+            print("Applying CPU optimizations...")
+            # Enable torch optimizations for CPU
+            torch.set_num_threads(4)  # Use 4 threads for better CPU performance
+            
+            # Convert to eval mode with optimizations
+            self.model.eval()
+            
+            # Enable torch compile for faster inference (PyTorch 2.0+)
+            try:
+                import torch._dynamo
+                torch._dynamo.config.suppress_errors = True
+                self.model = torch.compile(self.model, mode="reduce-overhead")
+                print("✓ Applied torch.compile optimization")
+            except Exception as e:
+                print(f"Note: torch.compile not available: {e}")
+        else:
+            self.model.eval()
+        
         print(f"Model loaded on {self.device}")
     
     def corrupt_code(
         self, 
         fixed_code, 
         max_length=512,
-        num_beams=5,
+        num_beams=2,  # Reduced from 5 to 2 for faster CPU inference
         temperature=1.2,
         top_p=0.95,
         num_return_sequences=1,
