@@ -21,3 +21,8 @@ venv/
 README.md
 test_*.py
 *_test.py
+
+# Ignore local model files (models load from HuggingFace)
+code_corruptor/code_corruptor_model_final/
+code_corruptor/archive/
+skill_classifier/checkpoints/
