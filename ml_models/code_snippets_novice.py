@@ -1,10 +1,10 @@
 """
-Novice Level Code Snippets for Squash Quiz
-Beginner to intermediate level - focus on logic and control flow
+Novice Level Code Snippets (Progression Score: 200-500)
+Focus on logic, control flow, loops, and basic data structures
+Long enough for the code corruptor to modify effectively
 """
 
 NOVICE_SNIPPETS = [
-    # Variables and Conditional Logic
     """def calculate_discount(price, is_member):
     if is_member:
         discount = price * 0.20
@@ -47,7 +47,6 @@ print(eligibility)""",
 letter, gpa = calculate_grade(85)
 print(letter, gpa)""",
 
-    # Loop Logic and Accumulation
     """def sum_even_numbers(limit):
     total = 0
     for i in range(1, limit + 1):
@@ -81,7 +80,6 @@ print(num_vowels)""",
 result = find_maximum([3, 7, 2, 9, 1])
 print(result)""",
 
-    # List Processing
     """def filter_positive(numbers):
     positive_nums = []
     for num in numbers:
@@ -112,7 +110,6 @@ print(result)""",
 result = find_duplicates([1, 2, 3, 2, 4, 3])
 print(result)""",
 
-    # String Processing Logic
     """def is_palindrome(word):
     cleaned = word.lower()
     reversed_word = cleaned[::-1]
@@ -145,17 +142,20 @@ print(words, chars)""",
 result = extract_numbers("abc123xyz456")
 print(result)""",
 
-    # Function Logic
     """def factorial(n):
+    if n < 0:
+        return None
     if n <= 1:
         return 1
     result = 1
     for i in range(2, n + 1):
         result *= i
+    print(f"Factorial of {n} is {result}")
     return result
 
 value = factorial(5)
-print(value)""",
+product = factorial(7)
+print(value, product)""",
 
     """def fibonacci(n):
     if n <= 0:
@@ -182,7 +182,6 @@ print(result)""",
 result = is_prime(17)
 print(result)""",
 
-    # Dictionary and Data Structures
     """def merge_dicts(dict1, dict2):
     merged = {}
     for key, value in dict1.items():
@@ -218,33 +217,6 @@ print(result)""",
 result = group_by_length(["cat", "dog", "elephant", "fox"])
 print(result)""",
 
-    # Advanced Control Flow
-    """def binary_search(arr, target):
-    left, right = 0, len(arr) - 1
-    while left <= right:
-        mid = (left + right) // 2
-        if arr[mid] == target:
-            return mid
-        elif arr[mid] < target:
-            left = mid + 1
-        else:
-            right = mid - 1
-    return -1
-
-result = binary_search([1, 3, 5, 7, 9, 11], 7)
-print(result)""",
-
-    """def bubble_sort(arr):
-    n = len(arr)
-    for i in range(n):
-        for j in range(0, n - i - 1):
-            if arr[j] > arr[j + 1]:
-                arr[j], arr[j + 1] = arr[j + 1], arr[j]
-    return arr
-
-result = bubble_sort([64, 34, 25, 12, 22, 11, 90])
-print(result)""",
-
     """def validate_password(password):
     if len(password) < 8:
         return False
@@ -258,5 +230,80 @@ print(result)""",
     return has_digit and has_upper
 
 result = validate_password("Pass123")
+print(result)""",
+
+    """def calculate_average(numbers):
+    if len(numbers) == 0:
+        return 0
+    total = 0
+    for num in numbers:
+        total += num
+    average = total / len(numbers)
+    return average
+
+scores = [85, 92, 78, 90, 88]
+avg = calculate_average(scores)
+print(avg)""",
+
+    """def find_min_max(numbers):
+    if len(numbers) == 0:
+        return None, None
+    min_val = numbers[0]
+    max_val = numbers[0]
+    for num in numbers:
+        if num < min_val:
+            min_val = num
+        if num > max_val:
+            max_val = num
+    return min_val, max_val
+
+minimum, maximum = find_min_max([5, 2, 9, 1, 7])
+print(minimum, maximum)""",
+
+    """def remove_duplicates(items):
+    unique_items = []
+    for item in items:
+        if item not in unique_items:
+            unique_items.append(item)
+    return unique_items
+
+data = [1, 2, 2, 3, 3, 3, 4, 5, 5]
+result = remove_duplicates(data)
+print(result)""",
+
+    """def count_characters(text):
+    char_count = {}
+    for char in text.lower():
+        if char.isalpha():
+            if char in char_count:
+                char_count[char] += 1
+            else:
+                char_count[char] = 1
+    return char_count
+
+result = count_characters("Hello World")
+print(result)""",
+
+    """def calculate_power(base, exponent):
+    if exponent == 0:
+        return 1
+    result = 1
+    for i in range(exponent):
+        result *= base
+    return result
+
+power_result = calculate_power(2, 8)
+print(power_result)""",
+
+    """def find_common_elements(list1, list2):
+    common = []
+    for item in list1:
+        if item in list2 and item not in common:
+            common.append(item)
+    return common
+
+a = [1, 2, 3, 4, 5]
+b = [4, 5, 6, 7, 8]
+result = find_common_elements(a, b)
 print(result)""",
 ]

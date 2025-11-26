@@ -1,8 +1,11 @@
 import sys
-sys.path.insert(0, r'x:\dev\Squash\squash\ml_models')
+import os
+
+# Add ml_models directory to path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'ml_models'))
 from code_snippets_novice import NOVICE_SNIPPETS
 
-print("Checking non-whitespace character count for novice snippets:\n")
+print("Checking non-whitespace character count for novice snippets (200-500 bracket):\n")
 for i, snippet in enumerate(NOVICE_SNIPPETS):
     non_ws_count = len([c for c in snippet if not c.isspace()])
     status = "✓ OK" if non_ws_count >= 120 else "✗ TOO SHORT"

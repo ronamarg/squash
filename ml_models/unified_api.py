@@ -25,9 +25,11 @@ from skill_classifier.api import model as skill_model, MODEL_PATH
 # Import code corruptor
 from code_corruptor.revertV3 import RevertV3
 
-# Import code snippets
+# Import code snippets for all difficulty levels
+from code_snippets_beginner import BEGINNER_SNIPPETS
 from code_snippets_novice import NOVICE_SNIPPETS
 from code_snippets_intermediate import INTERMEDIATE_SNIPPETS
+from code_snippets_advanced import ADVANCED_SNIPPETS
 
 app = Flask(__name__)
 CORS(app)
@@ -40,8 +42,10 @@ print("Preloading T5 model...")
 code_corruptor._load_t5_model()
 print("✓ Code Corruptor (RevertV3) with T5 model loaded")
 print(f"✓ Skill Classifier loaded from {MODEL_PATH}")
-print(f"✓ Loaded {len(NOVICE_SNIPPETS)} novice code snippets")
-print(f"✓ Loaded {len(INTERMEDIATE_SNIPPETS)} intermediate code snippets")
+print(f"✓ Loaded {len(BEGINNER_SNIPPETS)} beginner code snippets (0-200)")
+print(f"✓ Loaded {len(NOVICE_SNIPPETS)} novice code snippets (200-500)")
+print(f"✓ Loaded {len(INTERMEDIATE_SNIPPETS)} intermediate code snippets (500-700)")
+print(f"✓ Loaded {len(ADVANCED_SNIPPETS)} advanced code snippets (700-1000)")
 
 # ============================================================================
 # HEALTH CHECK
@@ -161,20 +165,34 @@ def predict_level():
 # ============================================================================
 @app.route('/get_snippet', methods=['POST'])
 def get_snippet():
-    """Get a random code snippet based on difficulty level"""
+    """Get a random code snippet based on difficulty level or progression score"""
     try:
         data = request.get_json()
         level = data.get('level', 'novice').lower()
+        progression_score = data.get('progression_score', None)
         
-        if level == 'novice':
+        # Map progression score to difficulty bracket if provided
+        if progression_score is not None:
+            if progression_score < 200:
+                level = 'beginner'
+            elif progression_score < 500:
+                level = 'novice'
+            elif progression_score < 700:
+                level = 'intermediate'
+            else:
+                level = 'advanced'
+        
+        # Select snippet based on level
+        if level == 'beginner':
+            snippet = random.choice(BEGINNER_SNIPPETS)
+        elif level == 'novice':
             snippet = random.choice(NOVICE_SNIPPETS)
         elif level == 'intermediate':
             snippet = random.choice(INTERMEDIATE_SNIPPETS)
         elif level == 'advanced':
-            # For advanced, use intermediate snippets for now
-            snippet = random.choice(INTERMEDIATE_SNIPPETS)
+            snippet = random.choice(ADVANCED_SNIPPETS)
         else:
-            return jsonify({'error': 'Invalid level. Use: novice, intermediate, or advanced'}), 400
+            return jsonify({'error': 'Invalid level. Use: beginner, novice, intermediate, or advanced'}), 400
         
         return jsonify({
             'level': level,
@@ -189,20 +207,34 @@ def get_snippet():
 
 @app.route('/get_corrupted_snippet', methods=['POST'])
 def get_corrupted_snippet():
-    """Get a random code snippet and its corrupted version"""
+    """Get a random code snippet and its corrupted version based on level or progression score"""
     try:
         data = request.get_json()
         level = data.get('level', 'novice').lower()
+        progression_score = data.get('progression_score', None)
+        
+        # Map progression score to difficulty bracket if provided
+        if progression_score is not None:
+            if progression_score < 200:
+                level = 'beginner'
+            elif progression_score < 500:
+                level = 'novice'
+            elif progression_score < 700:
+                level = 'intermediate'
+            else:
+                level = 'advanced'
         
         # Get random snippet based on level
-        if level == 'novice':
+        if level == 'beginner':
+            clean_code = random.choice(BEGINNER_SNIPPETS)
+        elif level == 'novice':
             clean_code = random.choice(NOVICE_SNIPPETS)
         elif level == 'intermediate':
             clean_code = random.choice(INTERMEDIATE_SNIPPETS)
         elif level == 'advanced':
-            clean_code = random.choice(INTERMEDIATE_SNIPPETS)
+            clean_code = random.choice(ADVANCED_SNIPPETS)
         else:
-            return jsonify({'error': 'Invalid level. Use: novice, intermediate, or advanced'}), 400
+            return jsonify({'error': 'Invalid level. Use: beginner, novice, intermediate, or advanced'}), 400
         
         # Corrupt the code
         print(f"Corrupting code for level: {level}")
