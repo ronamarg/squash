@@ -1,8 +1,8 @@
 import sys
 sys.path.insert(0, r'x:\dev\Squash\squash\ml_models')
-from code_snippets_novice import NOVICE_SNIPPETS
+from code_snippets_0_200 import SNIPPETS as NOVICE_SNIPPETS
 
-print("Checking non-whitespace character count for novice snippets:\n")
+print("Checking non-whitespace character count for 0-200 snippets:\n")
 for i, snippet in enumerate(NOVICE_SNIPPETS):
     non_ws_count = len([c for c in snippet if not c.isspace()])
     status = "✓ OK" if non_ws_count >= 120 else "✗ TOO SHORT"

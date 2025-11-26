@@ -46,6 +46,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   void initState() {
     super.initState();
+    _maybeSkipAssessment();
     // Get all multiple choice questions from both novice and experienced pools
     List<Map<String, dynamic>> mcPool = [];
     if (fullQuizData.containsKey('novice')) {
@@ -58,6 +59,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
     mcPool.shuffle();
     _assessmentQuestions = mcPool.take(15).toList();
+  }
+
+  Future<void> _maybeSkipAssessment() async {
+    final firebaseService = FirebaseService();
+    final currentUser = firebaseService.currentUser;
+    if (currentUser == null) return;
+    try {
+      final userData = await firebaseService.getUserData(currentUser.uid);
+      final skillRaw = (userData?.skillClassification ?? '').toString();
+      final skill = skillRaw.isEmpty ? 'novice' : skillRaw.toLowerCase();
+      if (!mounted) return;
+      if (skillRaw.isNotEmpty) {
+        // User already classified, go straight to main menu
+        final questions = fullQuizData[skill] ?? fullQuizData['novice']!;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => MainMenuScreen(level: skill, questionsToLoad: questions),
+          ),
+        );
+        return;
+      }
+    } catch (e) {
+      debugPrint('Onboarding skip check failed: $e');
+    }
   }
 
   Future<void> _classifyUser() async {
@@ -91,7 +116,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboardingSeen', true);
     
-    // Save user skill classification to Firebase
+    // Save user skill classification to Firebase (also sets initial progressionValue)
     final firebaseService = FirebaseService();
     final currentUser = firebaseService.currentUser;
     if (currentUser != null) {

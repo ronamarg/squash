@@ -3,14 +3,22 @@
 
 class EnvConfig {
   // ML API Base URL
-  // Change these values depending on where your API runs:
+  // DEVELOPMENT:
   // - Windows/Desktop -> 'http://localhost:5001' or 'http://127.0.0.1:5001'
   // - Android emulator -> 'http://10.0.2.2:5001'
   // - iOS simulator -> 'http://127.0.0.1:5001'
   // - Physical device -> 'http://<your-machine-lan-ip>:5001'
+  // 
+  // PRODUCTION:
+  // - Use your deployed API URL (e.g., 'https://your-app.onrender.com')
   static const String mlApiBaseUrl = 'YOUR_ML_API_BASE_URL_HERE';
   
+  // Ollama Cloud API Base URL (usually not needed, API handles this)
+  static const String ollamaApiBaseUrl = 'https://api.cloud.ollama.ai';
+  
   // Firebase Configuration
+  // Get these values from Firebase Console -> Project Settings
+  
   // Web
   static const String firebaseWebApiKey = 'YOUR_FIREBASE_WEB_API_KEY_HERE';
   static const String firebaseWebAppId = 'YOUR_FIREBASE_WEB_APP_ID_HERE';
@@ -32,3 +40,4 @@ class EnvConfig {
   static const String firebaseWindowsApiKey = 'YOUR_FIREBASE_WINDOWS_API_KEY_HERE';
   static const String firebaseWindowsAppId = 'YOUR_FIREBASE_WINDOWS_APP_ID_HERE';
 }
+

@@ -1,0 +1,17 @@
+{
+  "name": "squash-ml-api",
+  "version": "1.0.0",
+  "description": "Squash ML API deployment scripts",
+  "scripts": {
+    "build:web": "flutter build web --release --web-renderer canvaskit",
+    "deploy:firebase": "npm run build:web && firebase deploy --only hosting",
+    "deploy:vercel": "npm run build:web && cd build/web && vercel --prod",
+    "deploy:netlify": "npm run build:web && netlify deploy --prod --dir=build/web",
+    "test:api": "curl http://localhost:5001/health"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0",
+    "vercel": "^33.0.0",
+    "netlify-cli": "^17.0.0"
+  }
+}

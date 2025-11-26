@@ -12,6 +12,7 @@ import ast
 import random
 import subprocess
 import tempfile
+import requests
 from difflib import SequenceMatcher
 from typing import List
 
@@ -26,11 +27,24 @@ from skill_classifier.api import model as skill_model, MODEL_PATH
 from code_corruptor.revertV3 import RevertV3
 
 # Import code snippets
-from code_snippets_novice import NOVICE_SNIPPETS
-from code_snippets_intermediate import INTERMEDIATE_SNIPPETS
+from code_snippets_0_200 import SNIPPETS as SNIPPETS_0_200
+from code_snippets_200_500 import SNIPPETS as SNIPPETS_200_500
+from code_snippets_500_700 import SNIPPETS as SNIPPETS_500_700
+from code_snippets_700_1000 import SNIPPETS as SNIPPETS_700_1000
 
 app = Flask(__name__)
 CORS(app)
+
+# Ollama Cloud configuration - use environment variables
+OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', '')
+OLLAMA_API_URL = os.getenv('OLLAMA_API_URL', 'https://ollama.com/api/chat')
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'gpt-oss:20b')  # Most cost-efficient available model
+
+# Warn if API key is not set
+if not OLLAMA_API_KEY:
+    print("⚠️  WARNING: OLLAMA_API_KEY environment variable not set. LLM features will fail.")
+else:
+    print(f"✓ Ollama API configured with model: {OLLAMA_MODEL}")
 
 # Initialize models
 print("Loading models...")
@@ -40,8 +54,10 @@ print("Preloading T5 model...")
 code_corruptor._load_t5_model()
 print("✓ Code Corruptor (RevertV3) with T5 model loaded")
 print(f"✓ Skill Classifier loaded from {MODEL_PATH}")
-print(f"✓ Loaded {len(NOVICE_SNIPPETS)} novice code snippets")
-print(f"✓ Loaded {len(INTERMEDIATE_SNIPPETS)} intermediate code snippets")
+print(f"✓ Loaded {len(SNIPPETS_0_200)} snippets (0-200)")
+print(f"✓ Loaded {len(SNIPPETS_200_500)} snippets (200-500)")
+print(f"✓ Loaded {len(SNIPPETS_500_700)} snippets (500-700)")
+print(f"✓ Loaded {len(SNIPPETS_700_1000)} snippets (700-1000)")
 
 # ============================================================================
 # HEALTH CHECK
@@ -125,6 +141,232 @@ def run_code():
         }), 500
 
 # ============================================================================
+# OLLAMA LLM PROXY ENDPOINTS
+# ============================================================================
+@app.route('/llm/explain_code', methods=['POST'])
+def llm_explain_code():
+    """Generate explanation of what code does (for Start Practice)"""
+    try:
+        data = request.get_json()
+        code = data.get('code', '')
+        question = data.get('question', '')
+        
+        if not code:
+            return jsonify({'error': 'No code provided', 'success': False}), 400
+        
+        prompt = f"""You are a helpful Python programming tutor. A student is about to fix buggy code for this task:
+
+Task: {question}
+
+The correct solution is:
+```python
+{code}
+```
+
+Provide a brief (2-3 sentences) explanation of what this code does and why it solves the task. Keep it simple and educational."""
+        
+        # Call Ollama Cloud API with chat format
+        ollama_response = requests.post(
+            OLLAMA_API_URL,
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {OLLAMA_API_KEY}'
+            },
+            json={
+                'model': OLLAMA_MODEL,
+                'messages': [
+                    {'role': 'user', 'content': prompt}
+                ],
+                'stream': False
+            },
+            timeout=30
+        )
+        
+        if ollama_response.status_code == 200:
+            response_data = ollama_response.json()
+            return jsonify({
+                'success': True,
+                'explanation': response_data.get('message', {}).get('content', '').strip()
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Ollama API error: {ollama_response.status_code}'
+            }), 500
+            
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'success': False,
+            'error': 'Ollama request timed out. Is Ollama running?'
+        }), 504
+    except requests.exceptions.ConnectionError:
+        return jsonify({
+            'success': False,
+            'error': 'Could not connect to Ollama. Is it running on port 11434?'
+        }), 503
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }), 500
+
+@app.route('/llm/provide_feedback', methods=['POST'])
+def llm_provide_feedback():
+    """Provide feedback on why user's code differs from correct solution"""
+    try:
+        data = request.get_json()
+        user_code = data.get('user_code', '')
+        correct_code = data.get('correct_code', '')
+        question = data.get('question', '')
+        similarity_score = data.get('similarity_score', 0)
+        
+        if not user_code or not correct_code:
+            return jsonify({'error': 'Missing code', 'success': False}), 400
+        
+        prompt = f"""You are a Python programming tutor providing feedback on a student's code solution.
+
+Task: {question}
+
+Correct solution:
+```python
+{correct_code}
+```
+
+Student's solution (similarity score: {similarity_score}/100):
+```python
+{user_code}
+```
+
+Analyze the student's mistake and explain:
+1. What went wrong or what's different
+2. Why the correct approach works better
+3. A brief learning point
+
+Keep it concise (2-3 sentences), encouraging, and educational. Focus on the logic and reasoning, not just syntax."""
+        
+        ollama_response = requests.post(
+            OLLAMA_API_URL,
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {OLLAMA_API_KEY}'
+            },
+            json={
+                'model': OLLAMA_MODEL,
+                'messages': [
+                    {'role': 'user', 'content': prompt}
+                ],
+                'stream': False
+            },
+            timeout=30
+        )
+        
+        if ollama_response.status_code == 200:
+            response_data = ollama_response.json()
+            return jsonify({
+                'success': True,
+                'feedback': response_data.get('message', {}).get('content', '').strip()
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Ollama API error: {ollama_response.status_code}'
+            }), 500
+            
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'success': False,
+            'error': 'Ollama request timed out'
+        }), 504
+    except requests.exceptions.ConnectionError:
+        return jsonify({
+            'success': False,
+            'error': 'Could not connect to Ollama'
+        }), 503
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }), 500
+
+@app.route('/llm/explain_error', methods=['POST'])
+def llm_explain_error():
+    """Explain runtime errors and bugs (for Run Code)"""
+    try:
+        data = request.get_json()
+        code = data.get('code', '')
+        error_output = data.get('error_output', '')
+        exit_code = data.get('exit_code')
+        
+        if not code or not error_output:
+            return jsonify({'error': 'Missing code or error output', 'success': False}), 400
+        
+        exit_code_text = f' (exit code: {exit_code})' if exit_code is not None else ''
+        
+        prompt = f"""You are a Python programming tutor helping a student debug their code.
+
+The student wrote this code:
+```python
+{code}
+```
+
+When they ran it, they got this error{exit_code_text}:
+```
+{error_output}
+```
+
+Provide a helpful explanation that:
+1. Identifies what type of error this is
+2. Points to the specific line or section causing the issue
+3. Explains why this error occurred
+4. Suggests how to fix it
+
+Keep it concise (3-4 sentences), clear, and educational. Focus on teaching the debugging process."""
+        
+        ollama_response = requests.post(
+            OLLAMA_API_URL,
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': f'Bearer {OLLAMA_API_KEY}'
+            },
+            json={
+                'model': OLLAMA_MODEL,
+                'messages': [
+                    {'role': 'user', 'content': prompt}
+                ],
+                'stream': False
+            },
+            timeout=30
+        )
+        
+        if ollama_response.status_code == 200:
+            response_data = ollama_response.json()
+            return jsonify({
+                'success': True,
+                'explanation': response_data.get('message', {}).get('content', '').strip()
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'error': f'Ollama API error: {ollama_response.status_code}'
+            }), 500
+            
+    except requests.exceptions.Timeout:
+        return jsonify({
+            'success': False,
+            'error': 'Ollama request timed out'
+        }), 504
+    except requests.exceptions.ConnectionError:
+        return jsonify({
+            'success': False,
+            'error': 'Could not connect to Ollama'
+        }), 503
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': f'Server error: {str(e)}'
+        }), 500
+
+# ============================================================================
 # SKILL CLASSIFIER ENDPOINTS
 # ============================================================================
 @app.route('/predict_level', methods=['POST'])
@@ -161,31 +403,65 @@ def predict_level():
 # ============================================================================
 @app.route('/get_snippet', methods=['POST'])
 def get_snippet():
-    """Get a random code snippet based on difficulty level"""
+    """Get a random code snippet based on progressionValue bracket.
+
+    Expects JSON: { progressionValue: int }
+    Brackets:
+      0-199   -> very simple (SNIPPETS_0_200)
+      200-499 -> simple-intermediate (SNIPPETS_200_500)
+      500-699 -> advanced (SNIPPETS_500_700)
+      700-1000 -> very complex (SNIPPETS_700_1000)
+    """
     try:
-        data = request.get_json()
-        level = data.get('level', 'novice').lower()
-        
-        if level == 'novice':
-            snippet = random.choice(NOVICE_SNIPPETS)
-        elif level == 'intermediate':
-            snippet = random.choice(INTERMEDIATE_SNIPPETS)
-        elif level == 'advanced':
-            # For advanced, use intermediate snippets for now
-            snippet = random.choice(INTERMEDIATE_SNIPPETS)
+        data = request.get_json() or {}
+        pv = data.get('progressionValue')
+
+        # If client still sends 'level' for backward compatibility, accept it
+        level = data.get('level')
+
+        if pv is None:
+            # fallback to level-based behavior for compatibility
+            if level:
+                level = level.lower()
+                if level == 'novice':
+                    snippet = random.choice(SNIPPETS_0_200)
+                elif level == 'intermediate':
+                    snippet = random.choice(SNIPPETS_200_500)
+                elif level == 'advanced':
+                    snippet = random.choice(SNIPPETS_500_700)
+                else:
+                    return jsonify({'error': 'Invalid level. Use: novice, intermediate, or advanced'}), 400
+                return jsonify({'level': level, 'code': snippet, 'success': True})
+            return jsonify({'error': 'Missing progressionValue'}), 400
+
+        try:
+            pv = int(pv)
+        except Exception:
+            return jsonify({'error': 'progressionValue must be an integer'}), 400
+
+        if pv < 0:
+            pv = 0
+        if pv <= 199:
+            snippet = random.choice(SNIPPETS_0_200)
+            bracket = '0-200'
+        elif pv <= 499:
+            snippet = random.choice(SNIPPETS_200_500)
+            bracket = '200-500'
+        elif pv <= 699:
+            snippet = random.choice(SNIPPETS_500_700)
+            bracket = '500-700'
         else:
-            return jsonify({'error': 'Invalid level. Use: novice, intermediate, or advanced'}), 400
-        
+            snippet = random.choice(SNIPPETS_700_1000)
+            bracket = '700-1000'
+
         return jsonify({
-            'level': level,
+            'progressionValue': pv,
+            'bracket': bracket,
             'code': snippet,
             'success': True
         })
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/get_corrupted_snippet', methods=['POST'])
 def get_corrupted_snippet():
@@ -194,15 +470,36 @@ def get_corrupted_snippet():
         data = request.get_json()
         level = data.get('level', 'novice').lower()
         
-        # Get random snippet based on level
-        if level == 'novice':
-            clean_code = random.choice(NOVICE_SNIPPETS)
-        elif level == 'intermediate':
-            clean_code = random.choice(INTERMEDIATE_SNIPPETS)
-        elif level == 'advanced':
-            clean_code = random.choice(INTERMEDIATE_SNIPPETS)
+        # Get random snippet based on progressionValue bracket or legacy 'level'
+        pv = data.get('progressionValue')
+        level = data.get('level')
+
+        if pv is None and not level:
+            return jsonify({'error': 'Missing progressionValue or level'}), 400
+
+        if pv is not None:
+            try:
+                pv = int(pv)
+            except Exception:
+                return jsonify({'error': 'progressionValue must be integer'}), 400
+            if pv <= 199:
+                clean_code = random.choice(SNIPPETS_0_200)
+            elif pv <= 499:
+                clean_code = random.choice(SNIPPETS_200_500)
+            elif pv <= 699:
+                clean_code = random.choice(SNIPPETS_500_700)
+            else:
+                clean_code = random.choice(SNIPPETS_700_1000)
         else:
-            return jsonify({'error': 'Invalid level. Use: novice, intermediate, or advanced'}), 400
+            lvl = level.lower()
+            if lvl == 'novice':
+                clean_code = random.choice(SNIPPETS_0_200)
+            elif lvl == 'intermediate':
+                clean_code = random.choice(SNIPPETS_200_500)
+            elif lvl == 'advanced':
+                clean_code = random.choice(SNIPPETS_500_700)
+            else:
+                return jsonify({'error': 'Invalid level. Use: novice, intermediate, or advanced'}), 400
         
         # Corrupt the code
         print(f"Corrupting code for level: {level}")
@@ -210,6 +507,8 @@ def get_corrupted_snippet():
         
         try:
             corrupted_code = code_corruptor.corrupt(clean_code)
+            # Preserve original trailing calls (arguments and print lines)
+            corrupted_code = _restore_trailing_calls(clean_code, corrupted_code)
             print(f"Corruption successful! Corrupted length: {len(corrupted_code)} chars")
         except Exception as corruption_error:
             print(f"Corruption error: {str(corruption_error)}")
@@ -246,6 +545,8 @@ def corrupt():
             return jsonify({'error': 'No code provided'}), 400
         
         corrupted = code_corruptor.corrupt(clean_code)
+        # Preserve original trailing calls (arguments and print lines)
+        corrupted = _restore_trailing_calls(clean_code, corrupted)
         
         return jsonify({
             'original_code': clean_code,
@@ -300,6 +601,60 @@ DIFFERENT_DEF_NAME_PENALTY = 30.0
 AST_SIM_THRESHOLD = 0.5
 AST_PENALTY_MULTIPLIER = 50.0
 MAX_COST_OVERSHOOT = 10.0
+
+def _restore_trailing_calls(original: str, corrupted: str) -> str:
+    """Preserve LeetCode-style trailing call lines from the original code.
+
+    Strategy:
+    - Identify the last function definition in the original and take everything after it as the tail.
+    - If the original has no function defs, take the last 5 lines as a conservative tail.
+    - In the corrupted code, keep content up to its last function definition (or entire body if none),
+      then append the original tail verbatim.
+    - This ensures argument values and print calls remain identical to the original snippet.
+    """
+    try:
+        orig_lines = (original or "").splitlines()
+        corr_lines = (corrupted or "").splitlines()
+
+        # Find last def line index in original
+        orig_last_def_idx = -1
+        for i, line in enumerate(orig_lines):
+            if re.match(r"^\s*def\s+\w+\s*\(", line):
+                orig_last_def_idx = i
+
+        # Tail from original
+        if orig_last_def_idx != -1:
+            orig_tail = orig_lines[orig_last_def_idx + 1:]
+        else:
+            # Fallback: last few lines likely contain the call
+            orig_tail = orig_lines[-5:]
+
+        # If tail is empty, nothing to restore
+        if not any(l.strip() for l in orig_tail):
+            return corrupted or ""
+
+        # Find last def in corrupted
+        corr_last_def_idx = -1
+        for i, line in enumerate(corr_lines):
+            if re.match(r"^\s*def\s+\w+\s*\(", line):
+                corr_last_def_idx = i
+
+        if corr_last_def_idx != -1:
+            corr_head = corr_lines[:corr_last_def_idx + 1]
+        else:
+            # If no def, we replace the tail entirely with original tail
+            corr_head = corr_lines
+
+        # Ensure a blank line separation if needed
+        combined = []
+        combined.extend(corr_head)
+        if combined and (combined[-1].strip() != "" and (orig_tail and orig_tail[0].strip() != "")):
+            combined.append("")
+        combined.extend(orig_tail)
+        return "\n".join(combined)
+    except Exception:
+        # If anything goes wrong, return corrupted as-is
+        return corrupted or ""
 
 def normalize_code(code: str) -> str:
     """Normalize code by removing excess whitespace and converting to lowercase"""
@@ -452,6 +807,11 @@ if __name__ == '__main__':
     print("\nEndpoints:")
     print("  GET  /health           - Health check")
     print("\n  Code Execution:")
+    print("    POST /run_code       - Execute Python code")
+    print("\n  LLM Feedback (Ollama):")
+    print("    POST /llm/explain_code    - Generate code explanation")
+    print("    POST /llm/provide_feedback - Provide feedback on user code")
+    print("    POST /llm/explain_error    - Explain runtime errors")
     print("    POST /run_code       - Execute Python code safely")
     print("\n  Skill Classifier:")
     print("    POST /predict_level  - Classify user skill level")

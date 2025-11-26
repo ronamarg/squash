@@ -1,0 +1,6 @@
+# .firebaserc - Firebase project configuration
+{
+  "projects": {
+    "default": "squash-bc287"
+  }
+}

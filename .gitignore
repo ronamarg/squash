@@ -49,3 +49,26 @@ ml_models/code_corruptor/
 
 # Environment configuration (contains API keys and secrets)
 lib/config/env_config.dart
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.*.local
+
+# Docker
+.dockerignore
+
+# Python virtual environment
+.venv/
+venv/
+env/
+
+# Firebase
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+
+# Sensitive data
+*.key
+*.pem
+*.p12
