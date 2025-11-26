@@ -50,9 +50,11 @@ else:
 print("Loading models...")
 code_corruptor = RevertV3()
 # Preload T5 model to avoid delay on first request
-print("Preloading T5 model...")
-code_corruptor._load_t5_model()
-print("✓ Code Corruptor (RevertV3) with T5 model loaded")
+# NOTE: Disabled for Render free tier (512MB RAM limit)
+# Uncomment for production with 2GB+ RAM
+# print("Preloading T5 model...")
+# code_corruptor._load_t5_model()
+print("✓ Code Corruptor (RevertV3) initialized (T5 loads on first /corrupt request)")
 print(f"✓ Skill Classifier loaded from {MODEL_PATH}")
 print(f"✓ Loaded {len(SNIPPETS_0_200)} snippets (0-200)")
 print(f"✓ Loaded {len(SNIPPETS_200_500)} snippets (200-500)")
