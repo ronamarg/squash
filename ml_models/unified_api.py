@@ -13,6 +13,7 @@ import random
 import subprocess
 import tempfile
 import requests
+import ollama
 from difflib import SequenceMatcher
 from typing import List
 
@@ -37,13 +38,17 @@ CORS(app)
 
 # Ollama Cloud configuration - use environment variables
 OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', '')
-OLLAMA_API_URL = os.getenv('OLLAMA_API_URL', 'https://api.cloud.ollama.ai/v1/chat/completions')
-OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2:1b')  # Fast, cost-efficient model
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'gpt-oss:20b')  # Fast, available model on Ollama Cloud
 
-# Warn if API key is not set
+# Initialize Ollama client
 if not OLLAMA_API_KEY:
     print("⚠️  WARNING: OLLAMA_API_KEY environment variable not set. LLM features will fail.")
+    ollama_client = None
 else:
+    ollama_client = ollama.Client(
+        host='https://ollama.com',
+        headers={'Authorization': f'Bearer {OLLAMA_API_KEY}'}
+    )
     print(f"✓ Ollama API configured with model: {OLLAMA_MODEL}")
 
 # Initialize models
@@ -156,6 +161,9 @@ def llm_explain_code():
         if not code:
             return jsonify({'error': 'No code provided', 'success': False}), 400
         
+        if not ollama_client:
+            return jsonify({'success': False, 'error': 'Ollama API not configured'}), 503
+        
         prompt = f"""You are a helpful Python programming tutor. A student is about to fix buggy code for this task:
 
 Task: {question}
@@ -167,34 +175,16 @@ The correct solution is:
 
 Provide a brief (2-3 sentences) explanation of what this code does and why it solves the task. Keep it simple and educational."""
         
-        # Call Ollama Cloud API with chat format
-        ollama_response = requests.post(
-            OLLAMA_API_URL,
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {OLLAMA_API_KEY}'
-            },
-            json={
-                'model': OLLAMA_MODEL,
-                'messages': [
-                    {'role': 'user', 'content': prompt}
-                ],
-                'stream': False
-            },
-            timeout=30
+        # Call Ollama using the official Python library
+        response = ollama_client.chat(
+            model=OLLAMA_MODEL,
+            messages=[{'role': 'user', 'content': prompt}]
         )
         
-        if ollama_response.status_code == 200:
-            response_data = ollama_response.json()
-            return jsonify({
-                'success': True,
-                'explanation': response_data.get('message', {}).get('content', '').strip()
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': f'Ollama API error: {ollama_response.status_code}'
-            }), 500
+        return jsonify({
+            'success': True,
+            'explanation': response['message']['content'].strip()
+        })
             
     except requests.exceptions.Timeout:
         return jsonify({
@@ -225,6 +215,9 @@ def llm_provide_feedback():
         if not user_code or not correct_code:
             return jsonify({'error': 'Missing code', 'success': False}), 400
         
+        if not ollama_client:
+            return jsonify({'success': False, 'error': 'Ollama API not configured'}), 503
+        
         prompt = f"""You are a Python programming tutor providing feedback on a student's code solution.
 
 Task: {question}
@@ -246,33 +239,16 @@ Analyze the student's mistake and explain:
 
 Keep it concise (2-3 sentences), encouraging, and educational. Focus on the logic and reasoning, not just syntax."""
         
-        ollama_response = requests.post(
-            OLLAMA_API_URL,
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {OLLAMA_API_KEY}'
-            },
-            json={
-                'model': OLLAMA_MODEL,
-                'messages': [
-                    {'role': 'user', 'content': prompt}
-                ],
-                'stream': False
-            },
-            timeout=30
+        # Call Ollama using the official Python library
+        response = ollama_client.chat(
+            model=OLLAMA_MODEL,
+            messages=[{'role': 'user', 'content': prompt}]
         )
         
-        if ollama_response.status_code == 200:
-            response_data = ollama_response.json()
-            return jsonify({
-                'success': True,
-                'feedback': response_data.get('message', {}).get('content', '').strip()
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': f'Ollama API error: {ollama_response.status_code}'
-            }), 500
+        return jsonify({
+            'success': True,
+            'feedback': response['message']['content'].strip()
+        })
             
     except requests.exceptions.Timeout:
         return jsonify({
@@ -302,6 +278,9 @@ def llm_explain_error():
         if not code or not error_output:
             return jsonify({'error': 'Missing code or error output', 'success': False}), 400
         
+        if not ollama_client:
+            return jsonify({'success': False, 'error': 'Ollama API not configured'}), 503
+        
         exit_code_text = f' (exit code: {exit_code})' if exit_code is not None else ''
         
         prompt = f"""You are a Python programming tutor helping a student debug their code.
@@ -324,33 +303,16 @@ Provide a helpful explanation that:
 
 Keep it concise (3-4 sentences), clear, and educational. Focus on teaching the debugging process."""
         
-        ollama_response = requests.post(
-            OLLAMA_API_URL,
-            headers={
-                'Content-Type': 'application/json',
-                'Authorization': f'Bearer {OLLAMA_API_KEY}'
-            },
-            json={
-                'model': OLLAMA_MODEL,
-                'messages': [
-                    {'role': 'user', 'content': prompt}
-                ],
-                'stream': False
-            },
-            timeout=30
+        # Call Ollama using the official Python library
+        response = ollama_client.chat(
+            model=OLLAMA_MODEL,
+            messages=[{'role': 'user', 'content': prompt}]
         )
         
-        if ollama_response.status_code == 200:
-            response_data = ollama_response.json()
-            return jsonify({
-                'success': True,
-                'explanation': response_data.get('message', {}).get('content', '').strip()
-            })
-        else:
-            return jsonify({
-                'success': False,
-                'error': f'Ollama API error: {ollama_response.status_code}'
-            }), 500
+        return jsonify({
+            'success': True,
+            'explanation': response['message']['content'].strip()
+        })
             
     except requests.exceptions.Timeout:
         return jsonify({

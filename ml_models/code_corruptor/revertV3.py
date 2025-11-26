@@ -102,7 +102,7 @@ Guides to setting difficulty:
             self.use_hf = False
         
         self.num_passes = 1  # Single pass for faster inference (was 1-2)
-        self.temperature = 0.8  # Moderate for good errors with less variance
+        self.temperature = 1.2  # Moderate for good errors with less variance
         self.length_penalty = 2.0  # Moderate length preservation
         
         # Lazy load T5 model
