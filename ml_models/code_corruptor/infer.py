@@ -11,13 +11,15 @@ import argparse
 class CodeCorruptor:
     """Wrapper class for code corruption inference"""
     
-    def __init__(self, model_path, device=None):
+    def __init__(self, model_path, device=None, local_files_only=False, subfolder=None):
         """
         Initialize the code corruptor
         
         Args:
-            model_path: Path to the trained model directory
+            model_path: Path to the trained model directory or HuggingFace model ID
             device: 'cuda', 'cpu', or None (auto-detect)
+            local_files_only: If True, only use cached files (no downloads)
+            subfolder: For HuggingFace repos, specify subdirectory (e.g., "final_model")
         """
         if device is None:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -25,8 +27,16 @@ class CodeCorruptor:
             self.device = torch.device(device)
         
         print(f"Loading model from {model_path}...")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, local_files_only=True).to(self.device)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            model_path, 
+            local_files_only=local_files_only,
+            subfolder=subfolder
+        )
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_path, 
+            local_files_only=local_files_only,
+            subfolder=subfolder
+        ).to(self.device)
         self.model.eval()
         print(f"Model loaded on {self.device}")
     

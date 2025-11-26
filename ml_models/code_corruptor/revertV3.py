@@ -72,7 +72,7 @@ Guides to setting difficulty:
     
     def __init__(
         self,
-        model_path="./code_corruptor_model_final/final_model",
+        model_path="onegaiosu/squash-code-corruptor",  # HF repo ID (use subfolder param for subdirs)
         difficulty='advanced',
         device=None
     ):
@@ -80,19 +80,26 @@ Guides to setting difficulty:
         Initialize RevertV3
         
         Args:
-            model_path: Path to enhanced T5 model
+            model_path: Path or Hugging Face model ID (default: onegaiosu/squash-code-corruptor)
             difficulty: Always uses 'advanced' settings (parameter kept for compatibility)
             device: 'cuda', 'cpu', or None (auto-detect GPU). Auto-detects by default.
         """
         self.difficulty = 'advanced'  # Always use advanced
         self.device = device  # Store device preference
-        # Convert relative path to absolute path
-        if not os.path.isabs(model_path):
-            # Get the directory where this file (revertV3.py) is located
-            current_dir = os.path.dirname(os.path.abspath(__file__))
-            self.model_path = os.path.abspath(os.path.join(current_dir, model_path))
-        else:
+        
+        # Check if it's a Hugging Face model ID or local path
+        if '/' in model_path and not os.path.exists(model_path):
+            # It's a Hugging Face model ID (e.g., "username/model-name")
             self.model_path = model_path
+            self.use_hf = True
+        else:
+            # It's a local path
+            if not os.path.isabs(model_path):
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                self.model_path = os.path.abspath(os.path.join(current_dir, model_path))
+            else:
+                self.model_path = model_path
+            self.use_hf = False
         
         self.num_passes = random.randint(1, 2)  # 3-5 passes for more intense corruption
         self.temperature = 0.6  # High for creative errors
@@ -102,11 +109,29 @@ Guides to setting difficulty:
         self.t5_model = None
     
     def _load_t5_model(self):
-        """Lazy load enhanced T5 model"""
+        """Lazy load enhanced T5 model from Hugging Face or local path"""
         if self.t5_model is None:
             from code_corruptor.infer import CodeCorruptor
-            print(f"Loading enhanced model from {self.model_path}...")
-            self.t5_model = CodeCorruptor(self.model_path, device=self.device)
+            
+            if self.use_hf:
+                print(f"Loading model from Hugging Face: {self.model_path}...")
+                print("(First load will download ~850MB, cached afterward)")
+                # Allow downloads from HuggingFace, use final_model subfolder
+                self.t5_model = CodeCorruptor(
+                    self.model_path, 
+                    device=self.device, 
+                    local_files_only=False, 
+                    subfolder="final_model"
+                )
+            else:
+                print(f"Loading enhanced model from {self.model_path}...")
+                # Use local files only for local paths, no subfolder
+                self.t5_model = CodeCorruptor(
+                    self.model_path, 
+                    device=self.device, 
+                    local_files_only=True, 
+                    subfolder=None
+                )
             print("Model loaded!")
     
     def corrupt(self, code: str) -> str:
