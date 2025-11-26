@@ -7,7 +7,10 @@ import '../models/user_model.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    clientId: '538384695333-171qjk7mtch8plk0mpk34n7on00g0cid.apps.googleusercontent.com',
+    scopes: ['email'],
+  );
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   User? get currentUser => _auth.currentUser;

@@ -37,8 +37,8 @@ CORS(app)
 
 # Ollama Cloud configuration - use environment variables
 OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', '')
-OLLAMA_API_URL = os.getenv('OLLAMA_API_URL', 'https://ollama.com/api/chat')
-OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'gpt-oss:20b')  # Most cost-efficient available model
+OLLAMA_API_URL = os.getenv('OLLAMA_API_URL', 'https://api.cloud.ollama.ai/v1/chat/completions')
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2:1b')  # Fast, cost-efficient model
 
 # Warn if API key is not set
 if not OLLAMA_API_KEY:

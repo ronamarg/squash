@@ -1,21 +1,268 @@
 SNIPPETS = [
-"""def factorial(n):\n    r=1;\n    for i in range(2,n+1): r*=i+i%2\n    s=str(r); print(n,len(s),s[-5:])\nprint(factorial(10))""",
-"""def fib_series(k):\n    a,b=0,1; seq=[];\n    while len(seq)<k: seq.append(a); a,b=b,a+b\n    tail=sum(seq[-3:]); print(len(seq),tail,seq[:5])\nprint(fib_series(15))""",
-"""def chunk(xs,m):\n    out=[xs[i:i+m] for i in range(0,len(xs),m)]\n    flat=sum(len(c) for c in out); print(len(out),flat,out[0])\nprint(chunk(list(range(23)),5))""",
-"""def normalize(nums):\n    mx=max(nums); mn=min(nums); span=mx-mn if mx!=mn else 1; out=[(x-mn)/span for x in nums]; print(out[:4],mx,mn)\nprint(normalize([3,7,1,9,4,6]))""",
-"""def binary_search(a,t):\n    lo,hi=0,len(a)-1; steps=0\n    while lo<=hi:\n        mid=(lo+hi)//2; steps+=1;\n        if a[mid]==t: print(mid,steps,a[mid]); break\n        if a[mid]<t: lo=mid+1\n        else: hi=mid-1\n    else: print(-1,steps)\nprint(binary_search(list(range(0,60,3)),30))""",
-"""def rotate_left(xs,k):\n    k%=len(xs) if xs else 0; r=xs[k:]+xs[:k]; print(r[:5],len(r))\nprint(rotate_left(list(range(20)),7))""",
-"""def dedupe_stable(xs):\n    seen=set(); out=[];\n    for x in xs:\n        if x not in seen: seen.add(x); out.append(x)\n    print(len(out),out[:6])\nprint(dedupe_stable([1,2,1,3,2,4,5,4,6,7,7,8]))""",
-"""def vowel_map(text):\n    low=text.lower(); m={c:low.count(c) for c in 'aeiou'}; total=sum(m.values()); print(m,total)\nprint(vowel_map('Concatenation Example'))""",
-"""def transpose(mat):\n    t=[list(r) for r in zip(*mat)]; flat=sum(sum(r) for r in t); print(len(t),flat,t[0])\nprint(transpose([[1,2,3],[4,5,6],[7,8,9],[10,11,12]]))""",
-"""def sliding_sum(nums,k):\n    if k<=0: print([]);\n    cur=sum(nums[:k]); out=[cur];\n    for i in range(k,len(nums)): cur+=nums[i]-nums[i-k]; out.append(cur)\n    print(out[:5],len(out))\nprint(sliding_sum(list(range(30)),5))""",
-"""def groups_of_pairs(xs):\n    out=[(xs[i],xs[i+1]) for i in range(0,len(xs)-1,2)]; print(out[:4],len(out))\nprint(groups_of_pairs(list(range(25))))""",
-"""def multiply_mats(a,b):\n    rows=len(a); cols=len(b[0]); res=[[0]*cols for _ in range(rows)]\n    for i in range(rows):\n        for j in range(cols):\n            for k in range(len(b)): res[i][j]+=a[i][k]*b[k][j]\n    print(res[0][:3],rows,cols)\nprint(multiply_mats([[1,2,3],[4,5,6]],[[1,0],[0,1],[1,1]]))""",
-"""def prefix_sums(xs):\n    out=[]; acc=0;\n    for v in xs: acc+=v; out.append(acc)\n    print(acc,out[-2:],len(out))\nprint(prefix_sums([3,1,4,1,5,9,2,6,5]))""",
-"""def count_substring(s,sub):\n    c=s.count(sub); r=s.replace(sub,''); print(c,len(r),r[:6])\nprint(count_substring('ababababab','ab'))""",
-"""def pad_center(s,w):\n    d=w-len(s); left=d//2; right=d-left; out=' '*left+s+' '*right; print(len(out),out[:5])\nprint(pad_center('title',20))""",
-"""def range_pairs(n):\n    r=[(i,i*i) for i in range(n)]; tail=sum(v for _,v in r[-5:]); print(len(r),tail,r[0],r[-1])\nprint(range_pairs(25))""",
-"""def encode_numbers(xs):\n    s=':'.join(str(x) for x in xs); z=s.split(':'); print(len(z),z[0],z[-1])\nprint(encode_numbers([5,10,15,20,25,30,35,40]))""",
-"""def window_pairs(xs,k):\n    out=[xs[i:i+k] for i in range(len(xs)-k+1)]; print(len(out),out[0],out[-1])\nprint(window_pairs(list(range(18)),3))""",
-"""def invert_map(m):\n    r={v:k for k,v in m.items()}; keys=sorted(r.keys()); print(keys[:3],len(keys))\nprint(invert_map({'a':1,'b':2,'c':3,'d':4}))""",
+"""def process_scores(scores, min_pass):
+    passed = []
+    total = 0
+    for s in scores:
+        if s >= min_pass:
+            passed.append(s)
+            total = total + s
+        else:
+            total = total - 1
+    
+    if len(passed) > 0:
+        avg = total / len(passed)
+    else:
+        avg = 0
+        
+    print(f"Passed: {len(passed)} students")
+    print(f"Adjusted Average: {avg}")
+process_scores([40, 60, 80, 55, 90], 50)""",
+
+"""def calc_ratios(values, divisor):
+    results = []
+    skipped = 0
+    
+    if divisor == 0:
+        print("Critical Error: Divisor is 0")
+        return
+
+    for v in values:
+        if v % divisor == 0:
+            results.append(v // divisor)
+        else:
+            skipped = skipped + 1
+            
+    print(f"Clean Ratios: {results}")
+    print(f"Values skipped: {skipped}")
+calc_ratios([10, 23, 40, 55, 62], 5)""",
+
+"""def attempt_login(guesses, secret):
+    penalty = 0
+    locked = False
+    
+    for guess in guesses:
+        if locked:
+            print("System Locked. Contact Admin.")
+            break
+            
+        if guess == secret:
+            print("Access Granted.")
+            return
+        else:
+            penalty = penalty + 1
+            if penalty >= 3:
+                locked = True
+                
+    if locked:
+        print(f"Login Failed. Penalty: {penalty}")
+attempt_login(["admin", "1234", "password", "secret"], "secret")""",
+
+"""def analyze_numbers(nums):
+    evens_sum = 0
+    odds_sum = 0
+    e_list = []
+    o_list = []
+    
+    for n in nums:
+        if n % 2 == 0:
+            evens_sum = evens_sum + n
+            e_list.append(n)
+        else:
+            odds_sum = odds_sum + n
+            o_list.append(n)
+            
+    print(f"Evens: {e_list} (Sum {evens_sum})")
+    print(f"Odds: {o_list} (Sum {odds_sum})")
+analyze_numbers([1, 2, 3, 4, 5, 6])""",
+
+"""def find_long_words(text, min_len):
+    words = text.split(" ")
+    found = []
+    count = 0
+    
+    for w in words:
+        if len(w) > min_len:
+            found.append(w.upper())
+            count = count + 1
+            
+    print(f"Found {count} words > {min_len} chars:")
+    print(found)
+find_long_words("The quick brown fox jumps over the lazy dog", 3)""",
+
+"""def calculate_group_cost(ages):
+    total = 0
+    tickets = 0
+    
+    for age in ages:
+        tickets = tickets + 1
+        if age < 5:
+            cost = 0
+        elif age < 18:
+            cost = 10
+        elif age < 65:
+            cost = 20
+        else:
+            cost = 15
+        total = total + cost
+        
+    print(f"Total Tickets: {tickets}")
+    print(f"Total Cost: ${total}")
+calculate_group_cost([3, 15, 25, 70, 40])""",
+
+"""def locate_all(items, target):
+    indices = []
+    count = 0
+    idx = 0
+    
+    for item in items:
+        if item == target:
+            indices.append(idx)
+            count = count + 1
+        idx = idx + 1
+        
+    if count > 0:
+        print(f"Found '{target}' {count} times.")
+        print(f"Locations: {indices}")
+    else:
+        print("Target not found in list.")
+locate_all(["a", "b", "a", "c", "a"], "a")""",
+
+"""def split_stream(stream):
+    pos = []
+    neg = []
+    zeros = 0
+    
+    for val in stream:
+        if val > 0:
+            pos.append(val)
+        elif val < 0:
+            neg.append(val)
+        else:
+            zeros = zeros + 1
+            
+    print(f"Positives: {len(pos)} items -> {pos}")
+    print(f"Negatives: {len(neg)} items -> {neg}")
+    print(f"Zeros ignored: {zeros}")
+split_stream([10, -2, 0, 5, -8, 0, 3])""",
+
+"""def class_stats(grades):
+    passing = 0
+    failing = 0
+    total = 0
+    
+    for g in grades:
+        total = total + g
+        if g >= 60:
+            passing = passing + 1
+        else:
+            failing = failing + 1
+            
+    avg = total / len(grades)
+    print(f"Pass: {passing} | Fail: {failing}")
+    print(f"Class Average: {avg}")
+class_stats([55, 80, 90, 40, 75])""",
+
+"""def count_vowels_consonants(text):
+    vowels = "aeiou"
+    v_count = 0
+    c_count = 0
+    clean = text.lower()
+    
+    for char in clean:
+        if char in vowels:
+            v_count = v_count + 1
+        elif char.isalpha():
+            c_count = c_count + 1
+            
+    print(f"Analysis of: '{text}'")
+    print(f"Vowels: {v_count}")
+    print(f"Consonants: {c_count}")
+count_vowels_consonants("Hello World")""",
+
+"""def shopping_trip(prices, budget):
+    cart = []
+    spent = 0
+    
+    for p in prices:
+        if spent + p <= budget:
+            cart.append(p)
+            spent = spent + p
+        else:
+            print(f"Skipping item cost ${p} (Too expensive)")
+            
+    print(f"Bought {len(cart)} items: {cart}")
+    print(f"Total spent: ${spent}")
+    print(f"Change: ${budget - spent}")
+shopping_trip([20, 50, 10, 40, 15], 100)""",
+
+"""def process_numbers(raw_data):
+    processed = []
+    discarded = 0
+    
+    for n in raw_data:
+        if n > 0:
+            squared = n * n
+            if squared < 100:
+                processed.append(squared)
+            else:
+                discarded = discarded + 1
+                
+    print(f"Processed List: {processed}")
+    print(f"Large items discarded: {discarded}")
+process_numbers([2, 5, 12, 8, -3, 15])""",
+
+"""def launch_sequence(t_minus):
+    aborted = False
+    
+    while t_minus > 0:
+        if t_minus == 3:
+            print("Ignition engines...")
+        
+        if t_minus == 100: 
+            aborted = True
+            break
+            
+        print(f"T-minus {t_minus}")
+        t_minus = t_minus - 1
+        
+    if not aborted:
+        print("Liftoff successful!")
+    else:
+        print("Launch Aborted.")
+launch_sequence(5)""",
+
+"""def validate_user(user_role, is_active, has_badge):
+    access = False
+    
+    if not is_active:
+        print("Error: User account inactive")
+    elif user_role == "admin":
+        access = True
+    elif user_role == "staff" and has_badge:
+        access = True
+    
+    if access:
+        print(f"Door Unlocked for {user_role}")
+    else:
+        print("Access Denied")
+validate_user("staff", True, False)""",
+
+"""def monitor_system(readings):
+    alerts = 0
+    safe = []
+    
+    for temp in readings:
+        if temp > 90:
+            print(f"ALERT: High Temp {temp}")
+            alerts = alerts + 1
+        elif temp < 10:
+            print(f"ALERT: Low Temp {temp}")
+            alerts = alerts + 1
+        else:
+            safe.append(temp)
+            
+    print(f"System Check Complete.")
+    print(f"Total Alerts: {alerts}")
+    print(f"Safe Readings: {len(safe)}")
+monitor_system([50, 95, 20, 5, 60])""",
 ]

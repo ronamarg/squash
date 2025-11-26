@@ -1,19 +1,89 @@
 SNIPPETS = [
-"""def add(a,b):\n    # Return just the sum and print it\n    print(a+b)\nprint(add(2,3))""",
-"""def seq(n):\n    # Sum of squares from 0..n-1\n    s=0\n    for i in range(n): s+=i*i\n    print(s)\nprint(seq(7))""",
-"""def pack(a,b,c):\n    t=(a,b,c); s=str(t); d={'k':len(s),'v':t}; print(d['k'],d['v'])\nprint(pack('x',5,[1,2]))""",
-"""def rev(s):\n    r=s[::-1]; p=r+s; m=p[::2]; print(r,len(p),m[:3])\nprint(rev('abcdefg'))""",
-"""def tally(nums):\n    a=0; b=[];\n    for n in nums: a+=n; b.append(a-n//2)\n    print(a,b[-2:],len(b))\nprint(tally([1,2,3,4,5]))""",
-"""def chop(s):\n    a=s[:3]; b=s[-3:]; c=len(s); j=a+b+str(c); print(a,b,c,j)\nprint(chop('strawberry'))""",
-"""def filt(xs):\n    r=[x for x in xs if x%2==0]; s=[x+1 for x in xs if x%2]; print(r,s)\nprint(filt(list(range(10))))""",
-"""def grid(n):\n    g=[[i*j for j in range(n)] for i in range(n)]; flat=sum(sum(row) for row in g); print(len(g),flat,g[0][:3])\nprint(grid(5))""",
-"""def mini_sort(a):\n    # Print sorted list only\n    b=a[:]\n    for i in range(len(b)):\n        for j in range(i+1,len(b)):\n            if b[j]<b[i]: b[i],b[j]=b[j],b[i]\n    print(b)\nprint(mini_sort([4,1,3,2,8]))""",
-"""def mask(s):\n    r=['*' if i%2 else c for i,c in enumerate(s)]; t=''.join(r); print(t,len(t))\nprint(mask('hijklmnop'))""",
-"""def merge(a,b):\n    # Merge two sorted lists and print the merged list\n    i=j=0; out=[]\n    while i<len(a) and j<len(b):\n        if a[i] < b[j]:\n            out.append(a[i]); i+=1\n        else:\n            out.append(b[j]); j+=1\n    out.extend(a[i:]); out.extend(b[j:]); print(out)\nprint(merge([1,3,5],[2,4,6]))""",
-"""def counts(s):\n    # Print just vowel count\n    v=sum(1 for c in s if c.lower() in 'aeiou')\n    print(v)\nprint(counts('Beautiful day'))""",
-"""def pairs(xs):\n    # Print first three pairs only\n    out=[(xs[i],xs[i+1]) for i in range(len(xs)-1)]\n    print(out[:3])\nprint(pairs([9,8,7,6,5,4,3]))""",
-"""def spin(nums):\n    r=nums[::-1]; s=[r[i]+nums[i] for i in range(len(nums))] if nums else []; print(r,s[-2:] if s else s)\nprint(spin([2,4,6,8]))""",
-"""def uniq(s):\n    u=[];\n    for ch in s:\n        if ch not in u: u.append(ch)\n    print(u,len(u))\nprint(uniq('aabbccddeeffg'))""",
-"""def mat_add(n):\n    a=[[i+j for j in range(n)] for i in range(n)]; b=[[i*j for j in range(n)] for i in range(n)]; c=[[a[i][j]+b[i][j] for j in range(n)] for i in range(n)]; print(len(c),c[0][:3])\nprint(mat_add(4))""",
-"""def expand(s):\n    r=s*3; t=r[:10]; u=r[-10:]; print(len(r),t,u)\nprint(expand('xyza'))""",
+"""def show_welcome(name):
+    print("--- SYSTEM ---")
+    print(f"Welcome, {name}!")
+    print("--------------")
+show_welcome("User")""",
+
+"""def check_battery(level):
+    if level < 20:
+        print("Low Battery!")
+    else:
+        print("Battery Good.")
+check_battery(15)""",
+
+"""def double_number(num):
+    result = num * 2
+    print(f"{num} doubled is {result}")
+    return result
+double_number(10)""",
+
+"""def get_first_item(items):
+    if items:
+        print(f"First: {items[0]}")
+    else:
+        print("Empty list")
+get_first_item(['a', 'b', 'c'])""",
+
+"""def loop_three_times():
+    for i in range(3):
+        print("Knock knock...")
+    print("Who's there?")
+loop_three_times()""",
+
+"""def is_equal(a, b):
+    if a == b:
+        print("They are same")
+    else:
+        print("They are different")
+is_equal(5, 5)""",
+
+"""def km_to_miles(km):
+    miles = km * 0.621371
+    print(f"{km}km is {miles}mi")
+km_to_miles(10)""",
+
+"""def check_list_length(data):
+    size = len(data)
+    print(f"List has {size} items")
+check_list_length([1, 2, 3, 4])""",
+
+"""def simple_while(count):
+    while count > 0:
+        print(count)
+        count = count - 1
+simple_while(3)""",
+
+"""def string_combine(a, b):
+    full = a + " " + b
+    print(full)
+string_combine("Hello", "World")""",
+
+"""def check_negative(num):
+    if num < 0:
+        print("Negative number detected")
+    print("Check complete")
+check_negative(-5)""",
+
+"""def last_item_safe(data):
+    if len(data) > 0:
+        print(data[-1])
+last_item_safe([10, 20, 30])""",
+
+"""def print_square(num):
+    sq = num * num
+    print(f"{num} squared is {sq}")
+print_square(4)""",
+
+"""def boolean_check(is_on):
+    if is_on:
+        print("System is ON")
+    else:
+        print("System is OFF")
+boolean_check(False)""",
+
+"""def say_hello_many(times):
+    for i in range(times):
+        print(f"Hello #{i+1}")
+say_hello_many(3)""",
 ]
