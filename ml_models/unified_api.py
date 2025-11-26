@@ -163,6 +163,35 @@ def predict_level():
 # ============================================================================
 # CODE CORRUPTOR ENDPOINTS
 # ============================================================================
+
+def _get_level_from_progression(progression_score, default_level='novice'):
+    """Map progression score to difficulty level bracket."""
+    if progression_score is None:
+        return default_level
+    if progression_score < 200:
+        return 'beginner'
+    elif progression_score < 500:
+        return 'novice'
+    elif progression_score < 700:
+        return 'intermediate'
+    else:
+        return 'advanced'
+
+
+def _get_snippet_for_level(level):
+    """Get a random code snippet for the given difficulty level."""
+    if level == 'beginner':
+        return random.choice(BEGINNER_SNIPPETS)
+    elif level == 'novice':
+        return random.choice(NOVICE_SNIPPETS)
+    elif level == 'intermediate':
+        return random.choice(INTERMEDIATE_SNIPPETS)
+    elif level == 'advanced':
+        return random.choice(ADVANCED_SNIPPETS)
+    else:
+        return None
+
+
 @app.route('/get_snippet', methods=['POST'])
 def get_snippet():
     """Get a random code snippet based on difficulty level or progression score"""
@@ -172,26 +201,11 @@ def get_snippet():
         progression_score = data.get('progression_score', None)
         
         # Map progression score to difficulty bracket if provided
-        if progression_score is not None:
-            if progression_score < 200:
-                level = 'beginner'
-            elif progression_score < 500:
-                level = 'novice'
-            elif progression_score < 700:
-                level = 'intermediate'
-            else:
-                level = 'advanced'
+        level = _get_level_from_progression(progression_score, level)
         
         # Select snippet based on level
-        if level == 'beginner':
-            snippet = random.choice(BEGINNER_SNIPPETS)
-        elif level == 'novice':
-            snippet = random.choice(NOVICE_SNIPPETS)
-        elif level == 'intermediate':
-            snippet = random.choice(INTERMEDIATE_SNIPPETS)
-        elif level == 'advanced':
-            snippet = random.choice(ADVANCED_SNIPPETS)
-        else:
+        snippet = _get_snippet_for_level(level)
+        if snippet is None:
             return jsonify({'error': 'Invalid level. Use: beginner, novice, intermediate, or advanced'}), 400
         
         return jsonify({
@@ -214,26 +228,11 @@ def get_corrupted_snippet():
         progression_score = data.get('progression_score', None)
         
         # Map progression score to difficulty bracket if provided
-        if progression_score is not None:
-            if progression_score < 200:
-                level = 'beginner'
-            elif progression_score < 500:
-                level = 'novice'
-            elif progression_score < 700:
-                level = 'intermediate'
-            else:
-                level = 'advanced'
+        level = _get_level_from_progression(progression_score, level)
         
         # Get random snippet based on level
-        if level == 'beginner':
-            clean_code = random.choice(BEGINNER_SNIPPETS)
-        elif level == 'novice':
-            clean_code = random.choice(NOVICE_SNIPPETS)
-        elif level == 'intermediate':
-            clean_code = random.choice(INTERMEDIATE_SNIPPETS)
-        elif level == 'advanced':
-            clean_code = random.choice(ADVANCED_SNIPPETS)
-        else:
+        clean_code = _get_snippet_for_level(level)
+        if clean_code is None:
             return jsonify({'error': 'Invalid level. Use: beginner, novice, intermediate, or advanced'}), 400
         
         # Corrupt the code
