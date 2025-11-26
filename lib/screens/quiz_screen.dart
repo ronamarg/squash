@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../config/config.dart';
+import '../services/ollama_service.dart';
+import '../services/firebase_service.dart';
 
 // Define a type for your question data for clarity
 typedef QuestionData = List<Map<String, dynamic>>;
@@ -25,10 +27,15 @@ class QuizScreen extends StatefulWidget {
 
 class _QuizScreenState extends State<QuizScreen> {
   final TextEditingController _codeController = TextEditingController();
+  final OllamaService _ollamaService = OllamaService();
+  final FirebaseService _firebaseService = FirebaseService();
+  
   String question = '';
   String correctCode = '';
   String brokenCode = '';
   bool isLoading = true;
+  bool _loadingExplanation = false;
+  String? _codeExplanation;
   double score = 0;
   int questionNumber = 0;
   int streak = 0;
@@ -69,7 +76,12 @@ class _QuizScreenState extends State<QuizScreen> {
         correctAnswer = '';
         _codeController.text = brokenCode;
         isLoading = false;
+        _codeExplanation = null; // Reset explanation
+        _loadingExplanation = false;
       });
+      
+      // Load LLM explanation of the correct code
+      _loadCodeExplanation();
     } else {
       // Multiple choice logic
       List<String> opts = [];
@@ -99,6 +111,22 @@ class _QuizScreenState extends State<QuizScreen> {
         brokenCode = '';
         correctCode = '';
         isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadCodeExplanation() async {
+    setState(() => _loadingExplanation = true);
+    
+    final explanation = await _ollamaService.explainCode(
+      code: correctCode,
+      question: question,
+    );
+    
+    if (mounted) {
+      setState(() {
+        _codeExplanation = explanation;
+        _loadingExplanation = false;
       });
     }
   }
@@ -228,6 +256,48 @@ class _QuizScreenState extends State<QuizScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
+                              // LLM Code Explanation Card
+                              if (_codeExplanation != null || _loadingExplanation)
+                                Card(
+                                  color: Colors.blue.shade50,
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(12.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Icon(Icons.lightbulb_outline, color: Colors.blue.shade700, size: 20),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'What does the correct code do?',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.blue.shade700,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        if (_loadingExplanation)
+                                          const Center(
+                                            child: Padding(
+                                              padding: EdgeInsets.all(8.0),
+                                              child: CircularProgressIndicator(strokeWidth: 2),
+                                            ),
+                                          )
+                                        else if (_codeExplanation != null)
+                                          Text(
+                                            _codeExplanation!,
+                                            style: const TextStyle(fontSize: 13, height: 1.4),
+                                          ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              
                               const Text('Fix the code below:', style: TextStyle(fontSize: 16, color: Colors.orange)),
                               const SizedBox(height: 8),
                               TextField(
@@ -257,12 +327,77 @@ class _QuizScreenState extends State<QuizScreen> {
                                       scoreValue = int.parse(RegExp(r'\d+').stringMatch(result) ?? '0');
                                     } catch (_) {}
                                   }
+                                  
+                                  // Update quiz stats
+                                  final user = _firebaseService.currentUser;
+                                  if (user != null) {
+                                    await _firebaseService.updateQuizStats(user.uid, scoreValue);
+                                  }
+                                  
+                                  // Get LLM feedback on the mistake
+                                  String? feedback;
+                                  if (scoreValue < 100) {
+                                    feedback = await _ollamaService.provideFeedback(
+                                      userCode: userCode,
+                                      correctCode: correctCode,
+                                      question: question,
+                                      similarityScore: scoreValue,
+                                    );
+                                  }
+                                  
                                   if (!mounted) return;
                                   showDialog(
                                     context: context,
                                     builder: (_) => AlertDialog(
-                                      title: const Text('Code Correction Result'),
-                                      content: Text('Score: $scoreValue/100'),
+                                      title: Row(
+                                        children: [
+                                          Icon(
+                                            scoreValue >= 80 ? Icons.check_circle : Icons.info_outline,
+                                            color: scoreValue >= 80 ? Colors.green : Colors.orange,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          const Text('Code Correction Result'),
+                                        ],
+                                      ),
+                                      content: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Similarity Score: $scoreValue/100',
+                                              style: const TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            if (feedback != null) ...[
+                                              const SizedBox(height: 16),
+                                              const Divider(),
+                                              const SizedBox(height: 8),
+                                              Row(
+                                                children: [
+                                                  Icon(Icons.psychology, color: Colors.purple.shade600, size: 18),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    'AI Feedback',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Colors.purple.shade600,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                feedback,
+                                                style: const TextStyle(fontSize: 13, height: 1.4),
+                                              ),
+                                            ],
+                                          ],
+                                        ),
+                                      ),
                                       actions: [
                                         TextButton(
                                           onPressed: () {

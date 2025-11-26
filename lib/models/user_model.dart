@@ -49,7 +49,7 @@ class UserModel {
       username: map['username'] ?? map['displayName'] ?? 'User', // Fallback for backward compatibility
       photoUrl: map['photoUrl'],
       skillClassification: map['skillClassification'] ?? map['userLevel'] ?? 'novice', // Backward compatible
-      progressionValue: map['progressionValue'] ?? 0,
+      progressionValue: (map['progressionValue'] ?? 0).clamp(0, 1000),
       joinDate: (map['joinDate'] ?? map['createdAt'] ?? Timestamp.now()).toDate(),
       lastLogin: (map['lastLogin'] ?? Timestamp.now()).toDate(),
       totalQuizzesTaken: map['totalQuizzesTaken'] ?? 0,

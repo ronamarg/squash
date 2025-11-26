@@ -179,31 +179,118 @@ class FirebaseService {
 
   Future<void> updateSkillClassification(String uid, String skillClassification) async {
     try {
-      await _firestore.collection('users').doc(uid).update({
-        'skillClassification': skillClassification,
+      final docRef = _firestore.collection('users').doc(uid);
+      await _firestore.runTransaction((transaction) async {
+        final snapshot = await transaction.get(docRef);
+
+        // Determine initial progression target for this classification
+        final lc = skillClassification.toLowerCase();
+        final int targetInitial = (lc == 'novice') ? 150 : 400; // intermediate & advanced start at 400
+
+        if (snapshot.exists) {
+          final data = snapshot.data() ?? {};
+          final dynamic rawPV = data['progressionValue'];
+          final int currentPV = (rawPV is num) ? rawPV.toInt() : 0;
+          // Only bump progressionValue upward if below the target (avoid overwriting existing progress)
+          final newPV = currentPV < targetInitial ? targetInitial : currentPV;
+          debugPrint('[updateSkillClassification] uid=$uid skill=$lc currentPV=$currentPV target=$targetInitial newPV=$newPV');
+          transaction.update(docRef, {
+            'skillClassification': lc,
+            'progressionValue': newPV,
+            'progressionInitialized': true,
+          });
+        } else {
+          // Doc missing: create minimal user doc with initial progression
+          final user = _auth.currentUser;
+          debugPrint('[updateSkillClassification] Creating user doc for uid=$uid skill=$lc initialPV=$targetInitial');
+          transaction.set(docRef, {
+            'uid': uid,
+            'email': user?.email ?? '',
+            'username': user?.displayName ?? 'User${uid.substring(0,6)}',
+            'photoUrl': user?.photoURL,
+            'skillClassification': lc,
+            'progressionValue': targetInitial,
+            'progressionInitialized': true,
+            'joinDate': Timestamp.fromDate(DateTime.now()),
+            'lastLogin': Timestamp.fromDate(DateTime.now()),
+            'totalQuizzesTaken': 0,
+            'totalScore': 0,
+          });
+        }
       });
     } catch (e) {
-      debugPrint('Error updating skill classification: $e');
+      debugPrint('Error updating skill classification (with progression assignment): $e');
       rethrow;
+    }
+  }
+
+  /// Ensures the user's progressionValue is at least the baseline for their skillClassification.
+  /// Call this after onboarding if needed.
+  Future<int?> ensureProgressionBaseline(String uid) async {
+    try {
+      final docRef = _firestore.collection('users').doc(uid);
+      final snap = await docRef.get();
+      if (!snap.exists) return null;
+      final data = snap.data() ?? {};
+      final lc = (data['skillClassification'] ?? 'novice').toString().toLowerCase();
+      final baseline = (lc == 'novice') ? 150 : 400;
+      final dynamic rawPV = data['progressionValue'];
+      final currentPV = (rawPV is num) ? rawPV.toInt() : 0;
+      if (currentPV < baseline) {
+        debugPrint('[ensureProgressionBaseline] Raising uid=$uid from $currentPV to baseline $baseline for skill=$lc');
+        await docRef.update({'progressionValue': baseline});
+        return baseline;
+      }
+      return currentPV;
+    } catch (e) {
+      debugPrint('Error ensuring progression baseline: $e');
+      return null;
     }
   }
 
   Future<int> updateProgressionValue(String uid, int codeSimilarityScore) async {
     final docRef = _firestore.collection('users').doc(uid);
+    // Scoring algorithm design:
+    // - Apply a small multiplicative momentum to current value so progress feels gradual and satisfying.
+    // - Amplify positive deltas (user improved) to reward progress more noticeably.
+    // - Damp negative deltas so mistakes are not punishing.
+    // - Add a tiny bonus proportional to similarity to feel rewarding even for small gains.
     final delta = codeSimilarityScore - 80;
 
     try {
       final updatedValue = await _firestore.runTransaction((transaction) async {
         final snapshot = await transaction.get(docRef);
-        final currentValue = snapshot.exists ? (snapshot.data()?['progressionValue'] ?? 0) : 0;
-        final newValue = currentValue + delta;
+        final int currentValue = snapshot.exists ? (snapshot.data()?['progressionValue'] ?? 0) : 0;
+
+        // Multiplicative momentum (small): helps values grow slowly over time
+        const double momentum = 1.02; // 2% momentum
+
+        // Reward/dampen logic
+        double change;
+        if (delta >= 0) {
+          // amplify positive improvements
+          change = delta * 2.0; // positive improvements count more
+        } else {
+          // dampen negative changes so they don't feel punishing
+          change = delta * 0.3; // negative changes reduced to 30%
+        }
+
+        // Small bonus so higher absolute similarity gives a little extra satisfaction
+        final double bonus = (codeSimilarityScore.clamp(0, 100) / 100.0) * 1.0; // up to +1
+
+        // Combine momentum, change and bonus. Round to int and clamp to allowed range.
+        final double raw = (currentValue * momentum) + change + bonus;
+        final int newValue = raw.round().clamp(0, 1000);
+
         if (snapshot.exists) {
           transaction.update(docRef, {'progressionValue': newValue});
         } else {
           transaction.set(docRef, {'progressionValue': newValue}, SetOptions(merge: true));
         }
+
         return newValue;
       });
+
       return updatedValue;
     } catch (e) {
       debugPrint('Error updating progression value: $e');
@@ -221,35 +308,6 @@ class FirebaseService {
     } catch (e) {
       debugPrint('Error getting user data: $e');
       return null;
-    }
-  }
-
-  Future<void> updateProgressionScore(String uid, int score) async {
-    try {
-      await _firestore.collection('users').doc(uid).update({
-        'progressionScore': score,
-      });
-    } catch (e) {
-      debugPrint('Error updating progression score: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> incrementProgressionScore(String uid, int delta) async {
-    try {
-      final docRef = _firestore.collection('users').doc(uid);
-      await _firestore.runTransaction((transaction) async {
-        final snapshot = await transaction.get(docRef);
-        if (snapshot.exists) {
-          final currentScore = snapshot.data()?['progressionScore'] ?? 0;
-          transaction.update(docRef, {
-            'progressionScore': currentScore + delta,
-          });
-        }
-      });
-    } catch (e) {
-      debugPrint('Error incrementing progression score: $e');
-      rethrow;
     }
   }
 
@@ -277,7 +335,9 @@ class FirebaseService {
   Future<bool> hasCompletedOnboarding(String uid) async {
     try {
       final userData = await getUserData(uid);
-      return userData != null && userData.skillClassification != 'novice';
+      // Consider onboarding completed if a skillClassification exists (any value)
+      // This prevents re-showing onboarding even for users classified as 'novice'.
+      return userData != null && (userData.skillClassification).toString().isNotEmpty;
     } catch (e) {
       debugPrint('Error checking onboarding status: $e');
       return false;

@@ -73,7 +73,8 @@ Guides to setting difficulty:
     def __init__(
         self,
         model_path="./code_corruptor_model_final/final_model",
-        difficulty='advanced'
+        difficulty='advanced',
+        device=None
     ):
         """
         Initialize RevertV3
@@ -81,8 +82,10 @@ Guides to setting difficulty:
         Args:
             model_path: Path to enhanced T5 model
             difficulty: Always uses 'advanced' settings (parameter kept for compatibility)
+            device: 'cuda', 'cpu', or None (auto-detect GPU). Auto-detects by default.
         """
         self.difficulty = 'advanced'  # Always use advanced
+        self.device = device  # Store device preference
         # Convert relative path to absolute path
         if not os.path.isabs(model_path):
             # Get the directory where this file (revertV3.py) is located
@@ -101,9 +104,9 @@ Guides to setting difficulty:
     def _load_t5_model(self):
         """Lazy load enhanced T5 model"""
         if self.t5_model is None:
-            from infer import CodeCorruptor
+            from code_corruptor.infer import CodeCorruptor
             print(f"Loading enhanced model from {self.model_path}...")
-            self.t5_model = CodeCorruptor(self.model_path)
+            self.t5_model = CodeCorruptor(self.model_path, device=self.device)
             print("Model loaded!")
     
     def corrupt(self, code: str) -> str:

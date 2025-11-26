@@ -11,6 +11,7 @@ class Config {
   static String get similarityApiBase => _baseUrl;  // Uses /score
   static String get corruptorApiBase => _baseUrl;    // Uses /get_corrupted_snippet
   static String get skillApiBase => _baseUrl;        // Uses /predict_level
+  static String get ollamaApiBase => EnvConfig.ollamaApiBaseUrl;  // Ollama LLM service
   
   // Backward compatibility
   static String get apiBase => _baseUrl;
