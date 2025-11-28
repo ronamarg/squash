@@ -72,7 +72,7 @@ Guides to setting difficulty:
     
     def __init__(
         self,
-        model_path="onegaiosu/squash-code-corruptor",  # HF repo ID (use subfolder param for subdirs)
+        model_path="code_corruptor_model_final/final_model",
         difficulty='advanced',
         device=None
     ):
@@ -80,74 +80,50 @@ Guides to setting difficulty:
         Initialize RevertV3
         
         Args:
-            model_path: Path or Hugging Face model ID (default: onegaiosu/squash-code-corruptor)
+            model_path: Local path to model (relative to this file or absolute)
             difficulty: Always uses 'advanced' settings (parameter kept for compatibility)
             device: 'cuda', 'cpu', or None (auto-detect GPU). Auto-detects by default.
         """
         self.difficulty = 'advanced'  # Always use advanced
         self.device = device  # Store device preference
         
-        # Check if it's a Hugging Face model ID or local path
-        if '/' in model_path and not os.path.exists(model_path):
-            # It's a Hugging Face model ID (e.g., "username/model-name")
-            self.model_path = model_path
-            self.use_hf = True
+        # Local path only
+        if not os.path.isabs(model_path):
+            current_dir = os.path.dirname(os.path.abspath(__file__))
+            self.model_path = os.path.abspath(os.path.join(current_dir, model_path))
         else:
-            # It's a local path
-            if not os.path.isabs(model_path):
-                current_dir = os.path.dirname(os.path.abspath(__file__))
-                self.model_path = os.path.abspath(os.path.join(current_dir, model_path))
-            else:
-                self.model_path = model_path
-            self.use_hf = False
+            self.model_path = model_path
         
-        self.num_passes = 3  # 3 passes for GPU-strong corruption
-        self.temperature = 1.5  # Higher temp for more creative bugs
-        self.length_penalty = 3.5  # Strong length preservation
+        # MAXIMUM CORRUPTION MODE - Make code seriously broken
+        self.num_passes = 2  # Reduced for speed, model not helping much anyway
+        self.temperature = 2.5  # EXTREME temperature for maximum chaos
+        self.length_penalty = 0.3  # Very low penalty = aggressive changes
         
         # Lazy load T5 model
         self.t5_model = None
     
     def _load_t5_model(self):
-        """Lazy load enhanced T5 model from Hugging Face or local path"""
+        """Lazy load enhanced T5 model from local path"""
         if self.t5_model is None:
             from code_corruptor.infer import CodeCorruptor
-            
-            if self.use_hf:
-                print(f"Loading model from Hugging Face: {self.model_path}...")
-                print("(First load will download ~850MB, cached afterward)")
-                # Allow downloads from HuggingFace, use final_model subfolder
-                self.t5_model = CodeCorruptor(
-                    self.model_path, 
-                    device=self.device, 
-                    local_files_only=False, 
-                    subfolder="final_model"
-                )
-            else:
-                print(f"Loading enhanced model from {self.model_path}...")
-                # Use local files only for local paths, no subfolder
-                self.t5_model = CodeCorruptor(
-                    self.model_path, 
-                    device=self.device, 
-                    local_files_only=True, 
-                    subfolder=None
-                )
+            print(f"Loading model from {self.model_path}...")
+            self.t5_model = CodeCorruptor(self.model_path, device=self.device)
             print("Model loaded!")
     
-    def corrupt(self, code: str, operator_flip_chance: float = 0.4) -> str:
+    def corrupt(self, code: str, operator_flip_chance: float = 0.7) -> str:
         """
-        Corrupt code using enhanced T5 model, with optional operator swap augmentation.
+        Corrupt code using enhanced T5 model, with aggressive operator swap augmentation.
         
         The model naturally generates:
         - Logic errors (operator swaps, off-by-one, wrong vars)
         - Syntax errors (missing colons, indentation)
-        Optionally, a 40% chance to flip a random operator after each pass.
+        Plus 70% chance to flip an operator after each pass AND a guaranteed forced bug at end.
         
         Args:
             code: Original Python code
-            operator_flip_chance: Probability to flip an operator after each pass (default 0.4)
+            operator_flip_chance: Probability to flip an operator after each pass (default 0.7)
         Returns:
-            Corrupted code string
+            Corrupted code string with guaranteed semantic bug
         """
         import random
         import re
@@ -185,6 +161,7 @@ Guides to setting difficulty:
             return new_code, True
 
         self._load_t5_model()
+        print(f"[DEBUG] Starting corruption: {self.num_passes} passes, temp={self.temperature}, len_penalty={self.length_penalty}, flip_chance={operator_flip_chance}")
         corrupted = code
         for i in range(self.num_passes):
             corrupted = self.t5_model.corrupt_code(
@@ -193,13 +170,14 @@ Guides to setting difficulty:
                 length_penalty=self.length_penalty,
                 no_repeat_ngram_size=3  # Prevent line repetition
             )
-            # 40% chance to flip an operator after each pass
+            print(f"[DEBUG] Pass {i+1}/{self.num_passes} complete")
+            # 70% chance to flip an operator after each pass
             if random.random() < operator_flip_chance:
                 flipped, did_flip = flip_operator(corrupted)
                 if did_flip:
                     corrupted = flipped
-        # Guarantee at least one change: if unchanged after passes or only whitespace diffs,
-        # force a behavioral bug via operator flip or condition weakening.
+                    print(f"[DEBUG] Operator flipped after pass {i+1}")
+        # ALWAYS force a guaranteed semantic bug, not just when output matches input
         def _normalize(s: str) -> str:
             return re.sub(r"\s+", "", s or "").strip()
         def weaken_first_if_cond(src: str):
@@ -213,18 +191,42 @@ Guides to setting difficulty:
             new_line = f"{prefix}({cond}) and False{colon}"
             start, end = m.span()
             return src[:start] + new_line + src[end:], True
-        if _normalize(corrupted) == _normalize(code):
-            forced, did = flip_operator(corrupted)
-            if did:
-                corrupted = forced
+        
+        # ALWAYS force MULTIPLE semantic bugs since model isn't helping
+        print(f"[DEBUG] Forcing multiple guaranteed semantic bugs...")
+        
+        # 1. Try operator flip first
+        forced, did = flip_operator(corrupted)
+        if did:
+            corrupted = forced
+            print(f"[DEBUG] Forced operator flip applied")
+        
+        # 2. Also try to weaken an if condition (do both if possible)
+        weakened, did2 = weaken_first_if_cond(corrupted)
+        if did2:
+            corrupted = weakened
+            print(f"[DEBUG] If-condition weakened")
+        
+        # 3. If neither worked, try these fallbacks
+        if not did and not did2:
+            # Try flipping == to !=
+            alt = re.sub(r"==", "!=", corrupted, count=1)
+            if alt != corrupted:
+                corrupted = alt
+                print(f"[DEBUG] Fallback == to != applied")
             else:
-                weakened, did2 = weaken_first_if_cond(corrupted)
-                if did2:
-                    corrupted = weakened
+                # Last resort: remove first return statement
+                alt = re.sub(r"^(\s*)return\s+.*$", r"\1pass", corrupted, count=1, flags=re.MULTILINE)
+                if alt != corrupted:
+                    corrupted = alt
+                    print(f"[DEBUG] Removed first return statement")
                 else:
-                    alt = re.sub(r"==", "!=", corrupted, count=1)
+                    # Nuclear option: change first number
+                    alt = re.sub(r"\b([0-9]+)\b", lambda m: str(int(m.group(1))+1), corrupted, count=1)
                     if alt != corrupted:
                         corrupted = alt
+                        print(f"[DEBUG] Changed first number")
+        
         return corrupted
     
     def corrupt_verbose(self, code: str) -> Dict:

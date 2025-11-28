@@ -11,15 +11,13 @@ import argparse
 class CodeCorruptor:
     """Wrapper class for code corruption inference"""
     
-    def __init__(self, model_path, device=None, local_files_only=False, subfolder=None):
+    def __init__(self, model_path, device=None):
         """
         Initialize the code corruptor
         
         Args:
-            model_path: Path to the trained model directory or HuggingFace model ID
+            model_path: Local path to the trained model directory
             device: 'cuda', 'cpu', or None (auto-detect)
-            local_files_only: If True, only use cached files (no downloads)
-            subfolder: For HuggingFace repos, specify subdirectory (e.g., "final_model")
         """
         if device is None:
             self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -27,19 +25,8 @@ class CodeCorruptor:
             self.device = torch.device(device)
         
         print(f"Loading model from {model_path}...")
-        tok_kwargs = {"local_files_only": local_files_only}
-        mdl_kwargs = {"local_files_only": local_files_only}
-        if subfolder:
-            tok_kwargs["subfolder"] = subfolder
-            mdl_kwargs["subfolder"] = subfolder
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            model_path,
-            **tok_kwargs
-        )
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(
-            model_path,
-            **mdl_kwargs
-        ).to(self.device)
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path, local_files_only=True)
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_path, local_files_only=True).to(self.device)
         self.model.eval()
         print(f"Model loaded on {self.device}")
     
@@ -47,8 +34,8 @@ class CodeCorruptor:
         self, 
         fixed_code, 
         max_length=512,
-        num_beams=5,
-        temperature=5.0,
+        num_beams=1,
+        temperature=3.0,
         top_p=0.95,
         num_return_sequences=1,
         length_penalty=2.0,
@@ -83,21 +70,15 @@ class CodeCorruptor:
             return_tensors='pt'
         ).to(self.device)
         
-        # Calculate minimum length (at least 80% of input length)
-        input_length = inputs['input_ids'].shape[1]
-        min_length = max(10, int(input_length * 0.8))
-        
-        # Generate
+        # Generate with pure sampling at EXTREME temperature
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
                 max_length=max_length,
-                min_length=min_length,
-                num_beams=num_beams,
-                early_stopping=True,
-                temperature=temperature,
+                num_beams=1,  # No beam search for creative sampling
                 do_sample=True,
-                top_p=top_p,
+                temperature=min(temperature, 2.5),  # Cap at 2.5 to avoid numerical issues
+                top_p=0.92,  # Slightly lower for more variety
                 num_return_sequences=num_return_sequences,
                 length_penalty=length_penalty,
                 no_repeat_ngram_size=no_repeat_ngram_size

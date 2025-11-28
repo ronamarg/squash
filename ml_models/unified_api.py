@@ -67,20 +67,10 @@ def _ollama_chat(messages):
 
 # Initialize models
 print("Loading models...")
-# Prefer local model assets if present to avoid network downloads
-local_model_root = os.path.join(os.path.dirname(__file__), 'code_corruptor', 'code_corruptor_model_final')
-local_final_dir = os.path.join(local_model_root, 'final_model')
-if os.path.isdir(local_final_dir):
-    code_corruptor = RevertV3(model_path=local_final_dir)
-    print(f"✓ Using local Code Corruptor model at {local_final_dir}")
-else:
-    code_corruptor = RevertV3()
-# Preload T5 model to avoid delay on first request
-# NOTE: Disabled for Render free tier (512MB RAM limit)
-# Uncomment for production with 2GB+ RAM
-# print("Preloading T5 model...")
-# code_corruptor._load_t5_model()
-print("✓ Code Corruptor (RevertV3) initialized (T5 loads on first /corrupt request)")
+local_final_dir = os.path.join(os.path.dirname(__file__), 'code_corruptor', 'code_corruptor_model_final', 'final_model')
+code_corruptor = RevertV3(model_path=local_final_dir)
+print(f"✓ Code Corruptor (RevertV3) initialized at {local_final_dir}")
+print("  (T5 loads on first /corrupt request)")
 print(f"✓ Skill Classifier loaded from {MODEL_PATH}")
 print(f"✓ Loaded {len(SNIPPETS_0_200)} snippets (0-200)")
 print(f"✓ Loaded {len(SNIPPETS_200_500)} snippets (200-500)")
@@ -576,55 +566,51 @@ AST_PENALTY_MULTIPLIER = 50.0
 MAX_COST_OVERSHOOT = 10.0
 
 def _restore_trailing_calls(original: str, corrupted: str) -> str:
-    """Preserve LeetCode-style trailing call lines from the original code.
+    """Preserve only the function CALL at the end, not the function body.
 
     Strategy:
-    - Identify the last function definition in the original and take everything after it as the tail.
-    - If the original has no function defs, take the last 5 lines as a conservative tail.
-    - In the corrupted code, keep content up to its last function definition (or entire body if none),
-      then append the original tail verbatim.
-    - This ensures argument values and print calls remain identical to the original snippet.
+    - Find lines AFTER the function body ends (unindented lines after a def)
+    - These are typically the test calls like `check_battery(15)`
+    - Append only those to the corrupted code
     """
     try:
         orig_lines = (original or "").splitlines()
         corr_lines = (corrupted or "").splitlines()
 
-        # Find last def line index in original
-        orig_last_def_idx = -1
-        for i, line in enumerate(orig_lines):
-            if re.match(r"^\s*def\s+\w+\s*\(", line):
-                orig_last_def_idx = i
-
-        # Tail from original
-        if orig_last_def_idx != -1:
-            orig_tail = orig_lines[orig_last_def_idx + 1:]
-        else:
-            # Fallback: last few lines likely contain the call
-            orig_tail = orig_lines[-5:]
-
-        # If tail is empty, nothing to restore
-        if not any(l.strip() for l in orig_tail):
+        # Find the trailing call lines (unindented lines after function body)
+        trailing_calls = []
+        in_function = False
+        function_ended = False
+        
+        for line in orig_lines:
+            stripped = line.strip()
+            if re.match(r"^def\s+\w+\s*\(", stripped):
+                in_function = True
+                function_ended = False
+            elif in_function and stripped and not line.startswith((' ', '\t')):
+                # Unindented non-empty line after function = trailing call
+                function_ended = True
+                trailing_calls.append(line)
+            elif function_ended:
+                trailing_calls.append(line)
+        
+        # If no trailing calls found, return corrupted as-is
+        if not trailing_calls:
             return corrupted or ""
-
-        # Find last def in corrupted
-        corr_last_def_idx = -1
-        for i, line in enumerate(corr_lines):
-            if re.match(r"^\s*def\s+\w+\s*\(", line):
-                corr_last_def_idx = i
-
-        if corr_last_def_idx != -1:
-            corr_head = corr_lines[:corr_last_def_idx + 1]
-        else:
-            # If no def, we replace the tail entirely with original tail
-            corr_head = corr_lines
-
-        # Ensure a blank line separation if needed
-        combined = []
-        combined.extend(corr_head)
-        if combined and (combined[-1].strip() != "" and (orig_tail and orig_tail[0].strip() != "")):
-            combined.append("")
-        combined.extend(orig_tail)
-        return "\n".join(combined)
+        
+        # Remove any trailing calls from corrupted output and add original ones
+        corr_without_trailing = []
+        for line in corr_lines:
+            stripped = line.strip()
+            # Stop if we hit what looks like a function call (not a def)
+            if stripped and not line.startswith((' ', '\t')) and not stripped.startswith('def '):
+                if '(' in stripped and not stripped.startswith('#'):
+                    break
+            corr_without_trailing.append(line)
+        
+        # Combine corrupted function + original trailing calls
+        result_lines = corr_without_trailing + trailing_calls
+        return "\n".join(result_lines)
     except Exception:
         # If anything goes wrong, return corrupted as-is
         return corrupted or ""
