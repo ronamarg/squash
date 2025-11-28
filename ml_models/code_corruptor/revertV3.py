@@ -165,10 +165,18 @@ Guides to setting difficulty:
             ('and', 'or'),
             ('or', 'and'),
         ]
+        def _find_matches(code: str, token: str):
+            # Use word boundaries for word tokens; direct match for symbolic operators
+            if token.isalpha():
+                pattern = rf"\b{re.escape(token)}\b"
+            else:
+                pattern = re.escape(token)
+            return list(re.finditer(pattern, code))
+
         def flip_operator(code):
             candidates = []
             for op1, op2 in OPERATOR_FLIPS:
-                for match in re.finditer(rf'\\b{re.escape(op1)}\\b', code):
+                for match in _find_matches(code, op1):
                     candidates.append((match.start(), match.end(), op1, op2))
             if not candidates:
                 return code, False
@@ -190,6 +198,33 @@ Guides to setting difficulty:
                 flipped, did_flip = flip_operator(corrupted)
                 if did_flip:
                     corrupted = flipped
+        # Guarantee at least one change: if unchanged after passes or only whitespace diffs,
+        # force a behavioral bug via operator flip or condition weakening.
+        def _normalize(s: str) -> str:
+            return re.sub(r"\s+", "", s or "").strip()
+        def weaken_first_if_cond(src: str):
+            pattern = r"(^\s*if\s+)([^:\n]+)(:)"
+            m = re.search(pattern, src, flags=re.MULTILINE)
+            if not m:
+                return src, False
+            prefix, cond, colon = m.groups()
+            if " and False" in cond or " or True" in cond:
+                return src, False
+            new_line = f"{prefix}({cond}) and False{colon}"
+            start, end = m.span()
+            return src[:start] + new_line + src[end:], True
+        if _normalize(corrupted) == _normalize(code):
+            forced, did = flip_operator(corrupted)
+            if did:
+                corrupted = forced
+            else:
+                weakened, did2 = weaken_first_if_cond(corrupted)
+                if did2:
+                    corrupted = weakened
+                else:
+                    alt = re.sub(r"==", "!=", corrupted, count=1)
+                    if alt != corrupted:
+                        corrupted = alt
         return corrupted
     
     def corrupt_verbose(self, code: str) -> Dict:

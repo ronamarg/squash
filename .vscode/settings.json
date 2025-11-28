@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/dev/squash/windows"
+    "cmake.sourceDirectory": "C:/dev/squash/windows",
+    "cmake.ignoreCMakeListsMissing": true
 }

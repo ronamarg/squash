@@ -126,10 +126,16 @@ class CodeCorruptor:
             ('and', 'or'),
             ('or', 'and'),
         ]
+        def _find_matches(code: str, token: str):
+            if token.isalpha():
+                pattern = rf"\b{re.escape(token)}\b"
+            else:
+                pattern = re.escape(token)
+            return list(re.finditer(pattern, code))
         def flip_operator(code):
             candidates = []
             for op1, op2 in OPERATOR_FLIPS:
-                for match in re.finditer(rf'\\b{re.escape(op1)}\\b', code):
+                for match in _find_matches(code, op1):
                     candidates.append((match.start(), match.end(), op1, op2))
             if not candidates:
                 return code, False
