@@ -101,9 +101,9 @@ Guides to setting difficulty:
                 self.model_path = model_path
             self.use_hf = False
         
-        self.num_passes = 1  # Single pass for faster inference (was 1-2)
-        self.temperature = 1.2  # Moderate for good errors with less variance
-        self.length_penalty = 2.0  # Moderate length preservation
+        self.num_passes = 3  # 3 passes for GPU-strong corruption
+        self.temperature = 1.5  # Higher temp for more creative bugs
+        self.length_penalty = 3.5  # Strong length preservation
         
         # Lazy load T5 model
         self.t5_model = None
@@ -134,25 +134,50 @@ Guides to setting difficulty:
                 )
             print("Model loaded!")
     
-    def corrupt(self, code: str) -> str:
+    def corrupt(self, code: str, operator_flip_chance: float = 0.4) -> str:
         """
-        Corrupt code using enhanced T5 model
+        Corrupt code using enhanced T5 model, with optional operator swap augmentation.
         
         The model naturally generates:
         - Logic errors (operator swaps, off-by-one, wrong vars)
         - Syntax errors (missing colons, indentation)
+        Optionally, a 40% chance to flip a random operator after each pass.
         
         Args:
             code: Original Python code
-            
+            operator_flip_chance: Probability to flip an operator after each pass (default 0.4)
         Returns:
             Corrupted code string
         """
+        import random
+        import re
+        OPERATOR_FLIPS = [
+            ('==', '!='),
+            ('!=', '=='),
+            ('<=', '>'),
+            ('>=', '<'),
+            ('<', '>='),
+            ('>', '<='),
+            ('+', '-'),
+            ('-', '+'),
+            ('*', '/'),
+            ('/', '*'),
+            ('and', 'or'),
+            ('or', 'and'),
+        ]
+        def flip_operator(code):
+            candidates = []
+            for op1, op2 in OPERATOR_FLIPS:
+                for match in re.finditer(rf'\\b{re.escape(op1)}\\b', code):
+                    candidates.append((match.start(), match.end(), op1, op2))
+            if not candidates:
+                return code, False
+            start, end, op1, op2 = random.choice(candidates)
+            new_code = code[:start] + op2 + code[end:]
+            return new_code, True
+
         self._load_t5_model()
-        
         corrupted = code
-        
-        # Apply multiple passes for variety
         for i in range(self.num_passes):
             corrupted = self.t5_model.corrupt_code(
                 corrupted,
@@ -160,7 +185,11 @@ Guides to setting difficulty:
                 length_penalty=self.length_penalty,
                 no_repeat_ngram_size=3  # Prevent line repetition
             )
-        
+            # 40% chance to flip an operator after each pass
+            if random.random() < operator_flip_chance:
+                flipped, did_flip = flip_operator(corrupted)
+                if did_flip:
+                    corrupted = flipped
         return corrupted
     
     def corrupt_verbose(self, code: str) -> Dict:

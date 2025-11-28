@@ -44,12 +44,13 @@ class CodeCorruptor:
         self, 
         fixed_code, 
         max_length=512,
-        num_beams=3,
-        temperature=1.2,
+        num_beams=5,
+        temperature=5.0,
         top_p=0.95,
         num_return_sequences=1,
         length_penalty=2.0,
-        no_repeat_ngram_size=0
+        no_repeat_ngram_size=0,
+        operator_flip_chance=0.4
     ):
         """
         Corrupt fixed code to generate buggy version
@@ -63,6 +64,7 @@ class CodeCorruptor:
             num_return_sequences: Number of different corruptions to generate
             length_penalty: Penalty for shorter sequences (higher = longer output, 2.0 encourages full length)
             no_repeat_ngram_size: Prevent repeating n-grams (0 = disabled)
+            operator_flip_chance: Probability to flip an operator in the output (default: 0.4)
             
         Returns:
             List of corrupted code strings
@@ -103,8 +105,45 @@ class CodeCorruptor:
             self.tokenizer.decode(output, skip_special_tokens=True)
             for output in outputs
         ]
-        
-        return corrupted_codes if num_return_sequences > 1 else corrupted_codes[0]
+
+
+        import random
+        import re
+        OPERATOR_FLIPS = [
+            ('==', '!='),
+            ('!=', '=='),
+            ('<=', '>'),
+            ('>=', '<'),
+            ('<', '>='),
+            ('>', '<='),
+            ('+', '-'),
+            ('-', '+'),
+            ('*', '/'),
+            ('/', '*'),
+            ('and', 'or'),
+            ('or', 'and'),
+        ]
+        def flip_operator(code):
+            candidates = []
+            for op1, op2 in OPERATOR_FLIPS:
+                for match in re.finditer(rf'\\b{re.escape(op1)}\\b', code):
+                    candidates.append((match.start(), match.end(), op1, op2))
+            if not candidates:
+                return code, False
+            start, end, op1, op2 = random.choice(candidates)
+            new_code = code[:start] + op2 + code[end:]
+            return new_code, True
+        def maybe_flip(code):
+            if random.random() < operator_flip_chance:
+                flipped, did_flip = flip_operator(code)
+                if did_flip:
+                    return flipped
+            return code
+        if num_return_sequences > 1:
+            corrupted_codes = [maybe_flip(code) for code in corrupted_codes]
+            return corrupted_codes
+        else:
+            return maybe_flip(corrupted_codes[0])
     
     def batch_corrupt(self, fixed_codes, **kwargs):
         """
@@ -122,7 +161,7 @@ class CodeCorruptor:
     def corrupt_multiple_times(
         self,
         fixed_code,
-        num_passes=3,
+        num_passes=1,
         preserve_length=True,
         **kwargs
     ):
@@ -198,6 +237,12 @@ def main():
         default=0.8,
         help='Sampling temperature (0.0-2.0, higher=more random)'
     )
+    parser.add_argument(
+        '--operator_flip_chance',
+        type=float,
+        default=0.4,
+        help='Probability to flip an operator in the output (0.0-1.0, default=0.4)'
+    )
     
     args = parser.parse_args()
     
@@ -229,7 +274,8 @@ def main():
     corrupted = corruptor.corrupt_code(
         code,
         temperature=args.temperature,
-        num_return_sequences=args.num_variants
+        num_return_sequences=args.num_variants,
+        operator_flip_chance=args.operator_flip_chance
     )
     
     if isinstance(corrupted, list):

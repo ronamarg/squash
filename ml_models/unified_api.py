@@ -38,7 +38,7 @@ CORS(app)
 
 # Ollama Cloud configuration - use environment variables
 OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', '')
-OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'gpt-oss:20b')  # Fast, available model on Ollama Cloud
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3:8b')  # Updated to a valid Ollama Cloud model
 
 # Initialize Ollama client
 if not OLLAMA_API_KEY:

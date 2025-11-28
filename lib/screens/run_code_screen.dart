@@ -53,31 +53,39 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
 
   void _onCodeChanged() {
     final value = _codeController.text;
-    final cursorPos = _codeController.selection.baseOffset;
-    
-    // Auto-pair brackets, quotes, and parentheses
-    if (cursorPos > _lastCursorPosition && cursorPos > 0) {
+    final selection = _codeController.selection;
+    final cursorPos = selection.baseOffset;
+
+    // Only auto-pair if:
+    // - The selection is collapsed (no text selected)
+    // - The cursor moved forward by 1 (typing, not pasting or moving)
+    // - The last character was just typed
+    if (selection.isCollapsed && cursorPos > _lastCursorPosition && cursorPos > 0) {
       final lastChar = value[cursorPos - 1];
       final pairs = {'(': ')', '[': ']', '{': '}', '"': '"', "'": "'"};
-      
+
       if (pairs.containsKey(lastChar)) {
         final closeChar = pairs[lastChar]!;
-        // Check if closing pair isn't already there
+        // Only insert if the next character is not already the closing pair
         if (cursorPos >= value.length || value[cursorPos] != closeChar) {
-          final newText = value.substring(0, cursorPos) + closeChar + value.substring(cursorPos);
-          _codeController.text = newText;
-          _codeController.selection = TextSelection.collapsed(offset: cursorPos);
-          _lastCursorPosition = cursorPos;
-          return;
+          // Prevent double-inserting if user moved cursor and typed
+          final justTyped = _lastCursorPosition == cursorPos - 1;
+          if (justTyped) {
+            final newText = value.substring(0, cursorPos) + closeChar + value.substring(cursorPos);
+            _codeController.text = newText;
+            _codeController.selection = TextSelection.collapsed(offset: cursorPos);
+            _lastCursorPosition = cursorPos;
+            return;
+          }
         }
       }
     }
     _lastCursorPosition = cursorPos;
-    
+
     // Autocomplete suggestions
     final parts = value.split(RegExp(r'\s+|\n'));
     final last = parts.isNotEmpty ? parts.last : '';
-    
+
     if (last.length >= 2) {
       final matches = _suggestions.where((s) => s.startsWith(last) && s != last).toList();
       setState(() {
