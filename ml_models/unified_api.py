@@ -36,24 +36,45 @@ from code_snippets_700_1000 import SNIPPETS as SNIPPETS_700_1000
 app = Flask(__name__)
 CORS(app)
 
-# Ollama Cloud configuration - use environment variables
+# Ollama Cloud configuration
+# Get API key from https://ollama.com/settings/keys
 OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', '')
-OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3:8b')  # Updated to a valid Ollama Cloud model
+OLLAMA_MODEL = os.getenv('OLLAMA_MODEL', 'llama3.2')
 
-# Initialize Ollama client
-if not OLLAMA_API_KEY:
-    print("⚠️  WARNING: OLLAMA_API_KEY environment variable not set. LLM features will fail.")
-    ollama_client = None
+# Initialize Ollama Cloud client
+ollama_client = None
+if OLLAMA_API_KEY:
+    try:
+        ollama_client = ollama.Client(
+            host='https://ollama.com',
+            headers={'Authorization': f'Bearer {OLLAMA_API_KEY}'}
+        )
+        print(f"✓ Ollama Cloud configured | host: https://ollama.com | model: {OLLAMA_MODEL}")
+    except Exception as e:
+        print(f"⚠️  Ollama Cloud init failed: {e}")
+        ollama_client = None
 else:
-    ollama_client = ollama.Client(
-        host='https://ollama.com',
-        headers={'Authorization': f'Bearer {OLLAMA_API_KEY}'}
-    )
-    print(f"✓ Ollama API configured with model: {OLLAMA_MODEL}")
+    print("⚠️  OLLAMA_API_KEY not set. LLM features disabled.")
+    print("   Get your key from: https://ollama.com/settings/keys")
+
+def _ollama_chat(messages):
+    """Wrapper around ollama.chat that returns content string or raises."""
+    if not ollama_client:
+        raise ConnectionError("Ollama API not configured")
+    resp = ollama_client.chat(model=OLLAMA_MODEL, messages=messages)
+    # Newer ollama libs return dict with message/content
+    return resp.get('message', {}).get('content', '').strip()
 
 # Initialize models
 print("Loading models...")
-code_corruptor = RevertV3()
+# Prefer local model assets if present to avoid network downloads
+local_model_root = os.path.join(os.path.dirname(__file__), 'code_corruptor', 'code_corruptor_model_final')
+local_final_dir = os.path.join(local_model_root, 'final_model')
+if os.path.isdir(local_final_dir):
+    code_corruptor = RevertV3(model_path=local_final_dir)
+    print(f"✓ Using local Code Corruptor model at {local_final_dir}")
+else:
+    code_corruptor = RevertV3()
 # Preload T5 model to avoid delay on first request
 # NOTE: Disabled for Render free tier (512MB RAM limit)
 # Uncomment for production with 2GB+ RAM
@@ -161,8 +182,7 @@ def llm_explain_code():
         if not code:
             return jsonify({'error': 'No code provided', 'success': False}), 400
         
-        if not ollama_client:
-            return jsonify({'success': False, 'error': 'Ollama API not configured'}), 503
+        # Try reaching Ollama via Python client
         
         prompt = f"""You are a helpful Python programming tutor. A student is about to fix buggy code for this task:
 
@@ -175,26 +195,23 @@ The correct solution is:
 
 Provide a brief (2-3 sentences) explanation of what this code does and why it solves the task. Keep it simple and educational."""
         
-        # Call Ollama using the official Python library
-        response = ollama_client.chat(
-            model=OLLAMA_MODEL,
-            messages=[{'role': 'user', 'content': prompt}]
-        )
-        
-        return jsonify({
-            'success': True,
-            'explanation': response['message']['content'].strip()
-        })
+        explanation = _ollama_chat([{'role': 'user', 'content': prompt}])
+        return jsonify({'success': True, 'explanation': explanation})
             
     except requests.exceptions.Timeout:
         return jsonify({
             'success': False,
-            'error': 'Ollama request timed out. Is Ollama running?'
+            'error': 'Ollama Cloud request timed out'
         }), 504
     except requests.exceptions.ConnectionError:
         return jsonify({
             'success': False,
-            'error': 'Could not connect to Ollama. Is it running on port 11434?'
+            'error': 'Could not connect to Ollama Cloud'
+        }), 503
+    except ConnectionError as ce:
+        return jsonify({
+            'success': False,
+            'error': str(ce)
         }), 503
     except Exception as e:
         return jsonify({
@@ -215,8 +232,7 @@ def llm_provide_feedback():
         if not user_code or not correct_code:
             return jsonify({'error': 'Missing code', 'success': False}), 400
         
-        if not ollama_client:
-            return jsonify({'success': False, 'error': 'Ollama API not configured'}), 503
+        # Try reaching Ollama via Python client
         
         prompt = f"""You are a Python programming tutor providing feedback on a student's code solution.
 
@@ -239,16 +255,8 @@ Analyze the student's mistake and explain:
 
 Keep it concise (2-3 sentences), encouraging, and educational. Focus on the logic and reasoning, not just syntax."""
         
-        # Call Ollama using the official Python library
-        response = ollama_client.chat(
-            model=OLLAMA_MODEL,
-            messages=[{'role': 'user', 'content': prompt}]
-        )
-        
-        return jsonify({
-            'success': True,
-            'feedback': response['message']['content'].strip()
-        })
+        feedback = _ollama_chat([{'role': 'user', 'content': prompt}])
+        return jsonify({'success': True, 'feedback': feedback})
             
     except requests.exceptions.Timeout:
         return jsonify({
@@ -258,7 +266,12 @@ Keep it concise (2-3 sentences), encouraging, and educational. Focus on the logi
     except requests.exceptions.ConnectionError:
         return jsonify({
             'success': False,
-            'error': 'Could not connect to Ollama'
+            'error': 'Could not connect to Ollama Cloud'
+        }), 503
+    except ConnectionError as ce:
+        return jsonify({
+            'success': False,
+            'error': str(ce)
         }), 503
     except Exception as e:
         return jsonify({
@@ -278,8 +291,7 @@ def llm_explain_error():
         if not code or not error_output:
             return jsonify({'error': 'Missing code or error output', 'success': False}), 400
         
-        if not ollama_client:
-            return jsonify({'success': False, 'error': 'Ollama API not configured'}), 503
+        # Try reaching Ollama via Python client
         
         exit_code_text = f' (exit code: {exit_code})' if exit_code is not None else ''
         
@@ -303,26 +315,23 @@ Provide a helpful explanation that:
 
 Keep it concise (3-4 sentences), clear, and educational. Focus on teaching the debugging process."""
         
-        # Call Ollama using the official Python library
-        response = ollama_client.chat(
-            model=OLLAMA_MODEL,
-            messages=[{'role': 'user', 'content': prompt}]
-        )
-        
-        return jsonify({
-            'success': True,
-            'explanation': response['message']['content'].strip()
-        })
+        explanation = _ollama_chat([{'role': 'user', 'content': prompt}])
+        return jsonify({'success': True, 'explanation': explanation})
             
     except requests.exceptions.Timeout:
         return jsonify({
             'success': False,
-            'error': 'Ollama request timed out'
+            'error': 'Ollama Cloud request timed out'
         }), 504
     except requests.exceptions.ConnectionError:
         return jsonify({
             'success': False,
-            'error': 'Could not connect to Ollama'
+            'error': 'Could not connect to Ollama Cloud'
+        }), 503
+    except ConnectionError as ce:
+        return jsonify({
+            'success': False,
+            'error': str(ce)
         }), 503
     except Exception as e:
         return jsonify({

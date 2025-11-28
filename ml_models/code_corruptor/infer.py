@@ -27,15 +27,18 @@ class CodeCorruptor:
             self.device = torch.device(device)
         
         print(f"Loading model from {model_path}...")
+        tok_kwargs = {"local_files_only": local_files_only}
+        mdl_kwargs = {"local_files_only": local_files_only}
+        if subfolder:
+            tok_kwargs["subfolder"] = subfolder
+            mdl_kwargs["subfolder"] = subfolder
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_path, 
-            local_files_only=local_files_only,
-            subfolder=subfolder
+            model_path,
+            **tok_kwargs
         )
         self.model = AutoModelForSeq2SeqLM.from_pretrained(
-            model_path, 
-            local_files_only=local_files_only,
-            subfolder=subfolder
+            model_path,
+            **mdl_kwargs
         ).to(self.device)
         self.model.eval()
         print(f"Model loaded on {self.device}")
