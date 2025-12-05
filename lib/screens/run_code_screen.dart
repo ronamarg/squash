@@ -424,7 +424,7 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                                 child: CodeField(
                                   controller: _codeController,
                                   textStyle: codeText,
-                                  cursorColor: dark ? AppColors.accent : const Color(0xFFFF8A3D),
+                                  cursorColor: AppColors.accent,
                                   lineNumberStyle: const LineNumberStyle(
                                     width: 0,
                                     textStyle: TextStyle(fontSize: 0),
@@ -496,7 +496,7 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                             color: isFirst ? Colors.orange.shade50 : null,
                                               foregroundDecoration: isFirst
-                                                ? BoxDecoration(color: dark ? Colors.orange.withValues(alpha: 0.1) : null)
+                                                ? BoxDecoration(color: Colors.orange.withValues(alpha: 0.1))
                                                 : null,
                                             child: Row(
                                               children: [
@@ -511,7 +511,7 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                                                             style: TextStyle(
                                                               fontSize: 14,
                                                               fontWeight: FontWeight.bold,
-                                                              color: dark ? AppColors.accent : Colors.orange.shade700,
+                                                              color: AppColors.accent,
                                                               fontFamily: 'SourceCodePro',
                                                             ),
                                                           ),
@@ -691,7 +691,7 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: dark ? AppColors.surface : Colors.white,
+                        color: AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.accent.withValues(alpha: 0.25), width: 2),
                         boxShadow: [
@@ -710,7 +710,7 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                           child: Text(
                             _output.isEmpty ? 'Output will appear here.' : _output,
                             style: TextStyle(
-                              color: dark ? AppColors.textPrimary : Colors.black87,
+                              color: AppColors.textPrimary,
                               fontFamily: 'SourceCodePro',
                               fontSize: 15,
                               height: 1.5,
@@ -752,9 +752,9 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                   elevation: 16,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: dark ? AppColors.surface : Colors.purple.shade50,
+                      color: AppColors.surface,
                       border: Border(
-                        left: BorderSide(color: dark ? AppColors.outline : Colors.purple.shade300, width: 2),
+                        left: BorderSide(color: AppColors.outline, width: 2),
                       ),
                     ),
                     child: Column(
@@ -763,14 +763,14 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                         Container(
                           padding: const EdgeInsets.fromLTRB(20, 16, 8, 16),
                           decoration: BoxDecoration(
-                            color: dark ? AppColors.card : Colors.purple.shade100,
+                            color: AppColors.card,
                             border: Border(
-                              bottom: BorderSide(color: dark ? AppColors.outline : Colors.purple.shade200, width: 1),
+                              bottom: BorderSide(color: AppColors.outline, width: 1),
                             ),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.psychology, color: dark ? AppColors.accentSecondary : Colors.purple.shade700, size: 24),
+                              Icon(Icons.psychology, color: AppColors.accentSecondary, size: 24),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
@@ -778,12 +778,12 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: dark ? AppColors.textPrimary : Colors.purple.shade700,
+                                    color: AppColors.textPrimary,
                                   ),
                                 ),
                               ),
                               IconButton(
-                                icon: Icon(Icons.close, color: dark ? AppColors.textPrimary : Colors.purple.shade700),
+                                icon: Icon(Icons.close, color: AppColors.textPrimary),
                                 onPressed: () => setState(() => _helpDrawerOpen = false),
                               ),
                             ],
@@ -797,14 +797,14 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       CircularProgressIndicator(
-                                        color: dark ? AppColors.accentSecondary : Colors.purple.shade400,
+                                        color: AppColors.accentSecondary,
                                         strokeWidth: 3,
                                       ),
                                       const SizedBox(height: 16),
                                       Text(
                                         'Analyzing bug...',
                                         style: TextStyle(
-                                          color: dark ? AppColors.textPrimary : Colors.purple.shade600,
+                                          color: AppColors.textPrimary,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -823,7 +823,7 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                                           style: TextStyle(
                                             fontSize: 14,
                                             height: 1.6,
-                                            color: dark ? AppColors.textPrimary : Colors.black87,
+                                            color: AppColors.textPrimary,
                                           ),
                                         ),
                                       ),
@@ -832,7 +832,7 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                                       child: Text(
                                         'No bug analysis available',
                                         style: TextStyle(
-                                          color: dark ? AppColors.textMuted : Colors.purple.shade400,
+                                          color: AppColors.textMuted,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -860,7 +860,7 @@ class _RunCodeScreenState extends State<RunCodeScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
                     decoration: BoxDecoration(
-                      color: dark ? AppColors.accentSecondary : Colors.purple.shade400,
+                      color: AppColors.accentSecondary,
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(12),
                         bottomLeft: Radius.circular(12),
