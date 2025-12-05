@@ -145,6 +145,8 @@ class FirebaseService {
         photoUrl: user.photoURL,
         skillClassification: 'novice',
         progressionValue: 0,
+        currentLessonId: 'lesson_01',
+        lessonProgress: const {},
         joinDate: now,
         lastLogin: now,
         totalQuizzesTaken: 0,
@@ -169,6 +171,8 @@ class FirebaseService {
         photoUrl: user.photoURL,
         skillClassification: 'novice',
         progressionValue: 0,
+        currentLessonId: 'lesson_01',
+        lessonProgress: const {},
         joinDate: now,
         lastLogin: now,
         totalQuizzesTaken: 0,
@@ -334,6 +338,56 @@ class FirebaseService {
       rethrow;
     }
   }
+
+  // --- Lesson progression helpers for Duolingo-style gating ---
+
+  Future<Map<String, dynamic>> getLessonProgress(String uid) async {
+    final snap = await _firestore.collection('users').doc(uid).get();
+    if (!snap.exists) return {};
+    final data = snap.data() ?? {};
+    return Map<String, dynamic>.from(data['lessonProgress'] ?? {});
+  }
+
+  String _nextLessonId(String lessonId) {
+    final numPart = int.tryParse(lessonId.split('_').last) ?? 1;
+    final next = numPart + 1;
+    return 'lesson_${next.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> markLessonCompleted({
+    required String uid,
+    required String lessonId,
+    required int bestScore,
+  }) async {
+    final docRef = _firestore.collection('users').doc(uid);
+    final nowTs = Timestamp.fromDate(DateTime.now());
+
+    await _firestore.runTransaction((txn) async {
+      final snap = await txn.get(docRef);
+      final data = snap.data() ?? {};
+      final Map<String, dynamic> lp = Map<String, dynamic>.from(data['lessonProgress'] ?? {});
+      final existing = Map<String, dynamic>.from(lp[lessonId] ?? {});
+      final prevScore = (existing['bestScore'] ?? 0) as int;
+      final merged = {
+        'completed': true,
+        'bestScore': bestScore > prevScore ? bestScore : prevScore,
+        'completedAt': existing['completedAt'] ?? nowTs,
+      };
+      lp[lessonId] = merged;
+
+      // compute next lesson unlock
+      final currentLessonId = data['currentLessonId']?.toString() ?? 'lesson_01';
+      final nextId = _nextLessonId(lessonId);
+      final shouldAdvance = currentLessonId == lessonId;
+
+      txn.set(docRef, {
+        'lessonProgress': lp,
+        'currentLessonId': shouldAdvance ? nextId : currentLessonId,
+        'lastLogin': nowTs,
+      }, SetOptions(merge: true));
+    });
+  }
+
 
   Future<bool> hasCompletedOnboarding(String uid) async {
     try {

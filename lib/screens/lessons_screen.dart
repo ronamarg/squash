@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import '../services/firebase_service.dart';
+import '../models/user_model.dart';
 import 'lesson_detail_screen.dart';
+import '../config/theme.dart';
 
 class Lesson {
   final String title;
@@ -12,471 +15,594 @@ class Lesson {
   });
 }
 
-// I've organized the curriculum into a logical progression
+// I've organized the curriculum into a logical progression with mini-checks to prep for quizzes
 final List<Lesson> allLessons = [
   // --- MODULE 1: ABSOLUTE BEGINNER ---
-  
+
   const Lesson(
-    title: '1. First Steps & Printing',
-    summary: 'Your very first Python code.',
-    content: r'''
-Welcome to programming! Python is a language that allows you to give instructions to a computer.
+   title: '1. First Steps & Printing',
+   summary: 'Hello world, order of execution, and comments.',
+   content: r'''
+Why it matters: Printing is the quickest way to see what your code is doing and to debug.
 
-1. The Print Command
-The most basic instruction is `print()`. It displays text on the screen.
-   print("Hello, World!")
-   print("I am coding!")
+You will practice:
+- Writing your first `print()` calls.
+- Seeing that Python runs top-to-bottom.
+- Using comments to explain or disable code.
 
-2. Order Matters
-Python runs your code from top to bottom, line by line.
-   print("Line 1")
-   print("Line 2")
-   print("Line 3")
+Core ideas
+1) Printing text
+  print("Hello, World!")
+  print("I am coding!")
 
-3. Comments
-Any line starting with `#` is ignored by the computer. These are notes for humans.
-   # This is a comment to explain the code
-   print("This will print") 
-   # print("This will NOT print")
+2) Execution order (top to bottom)
+  print("Line 1")
+  print("Line 2")
+  print("Line 3")
+
+3) Comments are ignored by Python
+  # This is a helpful note
+  print("Visible")
+  # print("Hidden")
+
+Mini-check (write it):
+- Print your name on one line, then your favorite food on the next line.
 ''',
   ),
 
   const Lesson(
-    title: '2. Variables',
-    summary: 'How to store data for later use.',
-    content: r'''
-1. What is a Variable?
-Imagine a box with a label on it. You can put data inside the box to use later.
-   
-   # Create a variable named 'score' and put 10 inside
-   score = 10
-   print(score)
+   title: '2. Variables',
+   summary: 'Store values with good names and change them.',
+   content: r'''
+Why it matters: Variables let you reuse data instead of retyping it.
 
-2. Changing Values
-You can change what is inside the box at any time.
-   score = 10
-   print(score)  # Prints 10
-   
-   score = 20
-   print(score)  # Now prints 20
+You will practice:
+- Creating variables with `=`.
+- Updating values.
+- Picking clear names.
 
-3. Naming Rules
-Variable names cannot have spaces! Use underscores instead.
-   my_name = "Alice"  # Good (snake_case)
-   my name = "Alice"  # ERROR!
-   MyName = "Alice"   # Allowed, but not typical in Python
+Core ideas
+1) Create a variable
+  score = 10
+  print(score)
+
+2) Change it later
+  score = 10
+  score = 20
+  print(score)  # 20
+
+3) Naming rules
+  my_name = "Alice"   # snake_case is standard
+  my name = "Alice"   # ERROR (spaces not allowed)
+
+Mini-check:
+- Make `lives = 3`, subtract 1, print the result with `print(lives)`.
 ''',
   ),
 
   const Lesson(
-    title: '3. Data Types',
-    summary: 'Text, Numbers, and True/False.',
-    content: r'''
-In Python, every piece of data has a "Type". Python needs to know if something is a number or text to know what to do with it.
+   title: '3. Data Types',
+   summary: 'Strings, numbers, booleans, and how to inspect them.',
+   content: r'''
+Why it matters: Operations depend on the data type (text vs number vs True/False).
 
-1. Strings (str)
-Text is called a "String". It MUST be inside quotes.
-   name = "Mario"
-   job = 'Plumber'
+You will practice:
+- Declaring strings, ints, floats, and bools.
+- Checking a value’s type with `type()`.
 
-2. Integers (int)
-Whole numbers without decimals.
-   lives = 3
-   level = 1
+Core ideas
+1) Strings (text)
+  name = "Mario"
+  job = 'Plumber'
 
-3. Floats (float)
-Numbers with decimals.
-   speed = 4.5
-   pi = 3.14
+2) Integers and floats
+  lives = 3       # int
+  speed = 4.5     # float
 
-4. Booleans (bool)
-Logic values. Only `True` or `False` (Capitalized!).
-   is_game_over = False
-   has_key = True
+3) Booleans
+  is_game_over = False
+  has_key = True
 
-5. Checking Types
-You can ask Python what type something is:
-   print(type(lives)) # <class 'int'>
+4) Inspect a type
+  print(type(speed))  # <class 'float'>
+
+Mini-check:
+- Create `temperature = 21.5` and `is_raining = False`, then print their types.
 ''',
   ),
 
   const Lesson(
-    title: '4. Math & Operators',
-    summary: 'Using Python as a calculator.',
-    content: r'''
-Computers are great at math. You can perform calculations directly on numbers or variables.
+   title: '4. Math & Operators',
+   summary: 'Basic arithmetic, exponent, and modulo.',
+   content: r'''
+Why it matters: Games, finance, and data tasks all rely on math operations.
 
-1. Basic Math
-   print(2 + 2)    # Addition (4)
-   print(10 - 3)   # Subtraction (7)
-   print(5 * 5)    # Multiplication (25)
-   print(10 / 2)   # Division (5.0)
+You will practice:
+- +, -, *, /, **, and %.
+- Using variables inside expressions.
 
-2. Advanced Math
-   # Power (Exponents)
-   print(2 ** 3)   # 2 * 2 * 2 = 8
-   
-   # Modulo (Remainder)
-   # Useful for checking if numbers are even/odd
-   print(10 % 3)   # 10 divided by 3 is 3 remainder 1. Output: 1
+Core ideas
+1) Basic math
+  print(2 + 2)
+  print(10 - 3)
+  print(5 * 5)
+  print(10 / 2)   # 5.0 (float)
 
-3. Math with Variables
-   apple_price = 2
-   quantity = 5
-   total = apple_price * quantity
-   print(total)    # 10
+2) Power and remainder
+  print(2 ** 3)   # 8
+  print(10 % 3)   # 1 (remainder)
+
+3) Math with variables
+  price = 2
+  qty = 5
+  total = price * qty
+  print(total)
+
+Mini-check:
+- Compute the area of a rectangle with width 4 and height 7, store in `area`, and print it.
 ''',
   ),
 
   const Lesson(
-    title: '5. User Input',
-    summary: 'Getting data from the user.',
-    content: r'''
-So far, we have only set values in the code. Let's ask the user to type something!
+   title: '5. User Input',
+   summary: 'Read user input and convert it to numbers safely.',
+   content: r'''
+Why it matters: Interactive programs need data from people.
 
-1. The input() Function
-This pauses the program and waits for the user.
-   name = input("Enter your name: ")
-   print(f"Nice to meet you, {name}!")
+You will practice:
+- Using `input()`.
+- Converting strings to integers with `int()`.
 
-2. The "String" Problem
-`input()` ALWAYS returns text (String), even if the user types a number!
-   age = input("Enter age: ")
-   # print(age + 1)  <-- ERROR! You cannot add a number to text.
+Core ideas
+1) Read input as text
+  name = input("Enter your name: ")
+  print(f"Hi {name}!")
 
-3. Casting (Fixing the Problem)
-You must convert the input to a number using `int()`.
-   age_text = input("Enter age: ")
-   age_number = int(age_text)
-   
-   print(f"Next year you will be {age_number + 1}")
+2) Input is always a string
+  age_text = input("Enter age: ")
+  # print(age_text + 1)  # TypeError
+
+3) Cast to number
+  age = int(age_text)
+  print(age + 1)
+
+Mini-check:
+- Ask for a number, convert it to int, then print double its value.
 ''',
   ),
 
   // --- MODULE 2: WORKING WITH DATA ---
 
   const Lesson(
-    title: '6. Strings & Formatting',
-    summary: 'Combining variables with text.',
-    content: r'''
-1. F-Strings (The Best Way)
-Put an `f` before the quotes to put variables directly inside text using `{}`.
-   
-   score = 500
-   player = "Luigi"
-   
-   print(f"Player: {player}, Score: {score}")
+   title: '6. Strings & Formatting',
+   summary: 'Build readable messages with f-strings and helpers.',
+   content: r'''
+Why it matters: Clean string handling makes output and logs understandable.
 
-2. Combining Strings
-You can add strings together using `+`.
-   first = "Super"
-   last = "Mario"
-   full = first + " " + last 
-   print(full) # Super Mario
+You will practice:
+- f-strings for interpolation.
+- Combining strings and cleaning whitespace.
 
-3. Useful Tools
-   text = "  python  "
-   print(text.upper())   # "  PYTHON  "
-   print(text.strip())   # "python" (removes spaces)
-   print(len(text))      # 10 (counts characters)
+Core ideas
+1) f-strings
+  player = "Luigi"
+  score = 500
+  print(f"Player: {player}, Score: {score}")
+
+2) Concatenate
+  full = "Super" + " " + "Mario"
+  print(full)
+
+3) Helpful string methods
+  text = "  python  "
+  print(text.upper())
+  print(text.strip())
+  print(len(text))
+
+Mini-check:
+- Make `city = "London"`, `temp = 18`, then print `London is 18C` using an f-string.
 ''',
   ),
 
   // --- MODULE 3: CONTROL FLOW ---
 
   const Lesson(
-    title: '7. Conditionals (If/Else)',
-    summary: 'Making decisions.',
-    content: r'''
-Code usually runs in a straight line. "If" statements let the code branch.
+   title: '7. Conditionals (If/Else)',
+   summary: 'Branch logic with comparisons and elif chains.',
+   content: r'''
+Why it matters: Programs react differently depending on conditions.
 
-1. Comparison Operators
-   ==  (Equal to)
-   !=  (Not equal to)
-   >   (Greater than)
-   <   (Less than)
+You will practice:
+- Comparison operators.
+- if/elif/else structure.
 
-2. Simple Decision
-   age = 18
+Core ideas
+1) Comparisons
+  ==, !=, >, <, >=, <=
 
-   if age >= 18:
-       print("You can vote!")
-   else:
-       print("Too young.")
+2) Simple decision
+  age = 18
+  if age >= 18:
+     print("You can vote")
+  else:
+     print("Too young")
 
-3. Multiple Choices (elif)
-"elif" stands for "else if".
-   
-   score = 85
+3) Multiple branches
+  score = 85
+  if score >= 90:
+     print("Grade A")
+  elif score >= 80:
+     print("Grade B")
+  else:
+     print("Grade C")
 
-   if score >= 90:
-       print("Grade: A")
-   elif score >= 80:
-       print("Grade: B")
-   else:
-       print("Grade: C")
+Mini-check:
+- Write a check that prints "even" when `n % 2 == 0` else "odd".
 ''',
   ),
 
   const Lesson(
-    title: '8. Loops (For & While)',
-    summary: 'Doing things over and over.',
-    content: r'''
-1. For Loops (Counting)
-   # Count from 0 to 4
-   for i in range(5):
-       print(i)
+   title: '8. Loops (For & While)',
+   summary: 'Repeat work over ranges and while conditions hold.',
+   content: r'''
+Why it matters: Loops prevent copy-paste code and handle collections.
 
-2. Loop over a List
-   friends = ["Ross", "Joey", "Chandler"]
-   for friend in friends:
-       print(f"Hi {friend}")
+You will practice:
+- Counting with for.
+- Iterating lists.
+- Using while for open-ended loops.
 
-3. While Loops
-Keep running AS LONG AS a condition is true.
-   
-   battery = 5
-   while battery > 0:
-       print("Phone is on...")
-       battery = battery - 1
-   print("Battery died.")
+Core ideas
+1) Counting loop
+  for i in range(5):
+     print(i)
+
+2) Loop over list values
+  friends = ["Ross", "Joey", "Chandler"]
+  for friend in friends:
+     print(f"Hi {friend}")
+
+3) While loop
+  battery = 3
+  while battery > 0:
+     print("On")
+     battery -= 1
+  print("Off")
+
+Mini-check:
+- Print numbers 1 through 5 using a for loop, then do the same with a while loop.
 ''',
   ),
 
   // --- MODULE 4: DATA STRUCTURES ---
 
   const Lesson(
-    title: '9. Lists',
-    summary: 'Storing multiple items in one variable.',
-    content: r'''
-A list is a collection of items in a specific order.
+   title: '9. Lists',
+   summary: 'Ordered collections you can grow and edit.',
+   content: r'''
+Why it matters: Lists hold sequences like todos, scores, or records.
 
-1. Creating a List
-   backpack = ["Sword", "Shield", "Potion"]
+You will practice:
+- Creating, indexing, appending, and removing.
 
-2. Accessing Items (Index)
-Computers start counting at 0!
-   print(backpack[0])  # Sword
-   print(backpack[1])  # Shield
+Core ideas
+1) Make a list
+  backpack = ["Sword", "Shield", "Potion"]
 
-3. Modifying Lists
-   backpack.append("Map")  # Add to end
-   backpack[0] = "Axe"     # Change first item
-   backpack.remove("Potion") # Remove item
-   
-   print(backpack) 
-   # ['Axe', 'Shield', 'Map']
+2) Indexing (starts at 0)
+  print(backpack[0])
+  print(backpack[1])
+
+3) Modify
+  backpack.append("Map")
+  backpack[0] = "Axe"
+  backpack.remove("Potion")
+  print(backpack)
+
+Mini-check:
+- Start with `nums = [1, 2, 3]`, append 4, replace the first item with 10, then print the list.
 ''',
   ),
 
   const Lesson(
-    title: '10. Dictionaries',
-    summary: 'Key-Value pairs (like a real dictionary).',
-    content: r'''
-Lists use numbers (0, 1, 2) to find things. Dictionaries use "Keys".
+   title: '10. Dictionaries',
+   summary: 'Key-value lookups for fast access.',
+   content: r'''
+Why it matters: Dictionaries model real data (contacts, settings, JSON).
 
-1. Creating a Dictionary
-   phonebook = {
-     "Alice": "555-1234",
-     "Bob": "555-9876"
-   }
+You will practice:
+- Creating dictionaries, reading values, adding/updating keys.
 
-2. Accessing Data
-   print(phonebook["Alice"]) # Output: 555-1234
+Core ideas
+1) Create a dict
+  phonebook = {
+    "Alice": "555-1234",
+    "Bob": "555-9876"
+  }
 
-3. Adding/Updating
-   phonebook["Charlie"] = "555-5555" # Add new
-   phonebook["Alice"] = "555-0000"   # Update existing
+2) Access
+  print(phonebook["Alice"])
+
+3) Add or update
+  phonebook["Charlie"] = "555-5555"
+  phonebook["Alice"] = "555-0000"
+
+Mini-check:
+- Build a dict with keys name, role, level. Print the role. Update level to 2.
 ''',
   ),
 
   // --- MODULE 5: INTERMEDIATE ---
 
   const Lesson(
-    title: '11. Functions',
-    summary: 'Reusable blocks of code.',
-    content: r'''
-1. Defining a Function
-   def greet_user():
-       print("Welcome back!")
+   title: '11. Functions',
+   summary: 'Bundle work into reusable blocks.',
+   content: r'''
+Why it matters: Functions reduce repetition and make tests easier.
 
-   # It won't run until you call it:
-   greet_user()
+You will practice:
+- Defining functions with and without parameters.
+- Returning values.
 
-2. Parameters (Passing Data)
-   def square(number):
-       print(number * number)
+Core ideas
+1) Define and call
+  def greet_user():
+     print("Welcome back!")
 
-   square(5)  # 25
-   square(10) # 100
+  greet_user()
 
-3. Return Values
-Sometimes you want the function to give you an answer back.
-   def add(a, b):
-       return a + b
-   
-   result = add(10, 5)
-   print(result) # 15
+2) Parameters
+  def square(number):
+     return number * number
+
+  print(square(5))
+
+3) Multiple parameters + return
+  def add(a, b):
+     return a + b
+
+  total = add(10, 5)
+  print(total)
+
+Mini-check:
+- Write `def triple(x):` that returns 3*x and print `triple(4)`.
 ''',
   ),
 
   const Lesson(
-    title: '12. Classes & OOP',
-    summary: 'Creating your own custom objects.',
-    content: r'''
-1. The Class (The Blueprint)
-   class Dog:
-       def __init__(self, name):
-           self.name = name
-       
-       def bark(self):
-           print(f"{self.name} says Woof!")
+   title: '12. Classes & OOP',
+   summary: 'Create blueprints (classes) to build objects.',
+   content: r'''
+Why it matters: Objects group data with behavior (methods) and scale larger apps.
 
-2. The Object (The House built from blueprint)
-   my_dog = Dog("Buddy")
-   neighbor_dog = Dog("Rex")
+You will practice:
+- Defining a class with `__init__`.
+- Creating instances and calling methods.
 
-   my_dog.bark()      # Buddy says Woof!
-   neighbor_dog.bark() # Rex says Woof!
+Core ideas
+1) Define a class
+  class Dog:
+     def __init__(self, name):
+        self.name = name
+
+     def bark(self):
+        print(f"{self.name} says Woof!")
+
+2) Create objects
+  my_dog = Dog("Buddy")
+  neighbor_dog = Dog("Rex")
+
+3) Call methods
+  my_dog.bark()
+  neighbor_dog.bark()
+
+Mini-check:
+- Add a method `rename(self, new_name)` that updates `self.name`, then call it.
 ''',
   ),
 
   const Lesson(
-    title: '13. Modules & Libraries',
-    summary: 'Using code others have written.',
-    content: r'''
-Python has "batteries included". You can import powerful tools.
+   title: '13. Modules & Libraries',
+   summary: 'Import and reuse existing code.',
+   content: r'''
+Why it matters: You rarely start from scratch—modules save time.
 
-1. Random Module
-   import random
-   
-   roll = random.randint(1, 6)
-   print(f"You rolled a {roll}")
+You will practice:
+- Importing standard library modules.
+- Calling their functions.
 
-2. Time Module
-   import time
-   
-   print("Sleeping...")
-   time.sleep(2) # Pause for 2 seconds
-   print("Awake!")
+Core ideas
+1) Random
+  import random
+  roll = random.randint(1, 6)
+  print(f"You rolled {roll}")
+
+2) Time
+  import time
+  print("Sleeping...")
+  time.sleep(2)
+  print("Awake!")
+
+Mini-check:
+- Use `random.choice` on a list of three snacks and print the result.
 ''',
   ),
 
   const Lesson(
-    title: '14. Regular Expressions (Regex)',
-    summary: 'Finding patterns in text.',
-    content: r'''
-Regex is a tool for advanced search (like finding emails or phone numbers).
+   title: '14. Regular Expressions (Regex)',
+   summary: 'Search text with patterns.',
+   content: r'''
+Why it matters: Regex helps validate and extract structured text (emails, phones).
 
-1. Basic Match
-   import re
-   
-   text = "My number is 123-456-7890"
-   
-   # \d means "Any Digit"
-   # + means "One or more"
-   match = re.search(r"\d+-\d+-\d+", text)
-   
-   if match:
-       print("Found phone number:", match.group())
+You will practice:
+- Writing a simple pattern and matching it.
+
+Core ideas
+1) Basic match
+  import re
+  text = "My number is 123-456-7890"
+  match = re.search(r"\d+-\d+-\d+", text)
+  if match:
+     print("Found:", match.group())
+
+2) Character classes and quantifiers
+  email = "dev@example.com"
+  pattern = r"[\w\.-]+@[\w\.-]+"  # simple email-ish pattern
+  print(re.match(pattern, email))
+
+Mini-check:
+- Write a regex that matches three letters followed by two digits (e.g., ABC12) and test it.
 ''',
   ),
 ];
 class LessonsScreen extends StatelessWidget {
   const LessonsScreen({super.key});
 
+  String _lessonId(int index) => 'lesson_${(index + 1).toString().padLeft(2, '0')}';
+
+  bool _isUnlocked({
+    required String lessonId,
+    required String currentLessonId,
+    required Map<String, dynamic> progress,
+  }) {
+    if (lessonId == 'lesson_01') return true;
+    // Unlocked if currentLessonId is this or beyond, or if previous is completed
+    if (lessonId.compareTo(currentLessonId) <= 0) return true;
+    final numPart = int.tryParse(lessonId.split('_').last) ?? 1;
+    final prevId = 'lesson_${(numPart - 1).toString().padLeft(2, '0')}';
+    final prevDone = (progress[prevId]?['completed'] ?? false) == true;
+    return prevDone;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final firebase = FirebaseService();
+    final user = firebase.currentUser;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Python Lessons'),
-        backgroundColor: const Color(0xFFFF8A3D),
+        backgroundColor: AppColors.background,
         centerTitle: true,
       ),
-      backgroundColor: const Color(0xFFFFFBF5),
-      body: ListView.separated(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        itemCount: allLessons.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 16),
-        itemBuilder: (context, i) {
-          final lesson = allLessons[i];
-          return InkWell(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => LessonDetailScreen(lesson: lesson),
-              ),
-            ),
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFFFFB366).withValues(alpha: 0.4),
-                    const Color(0xFFFF8A3D).withValues(alpha: 0.7),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      backgroundColor: AppColors.background,
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppGradients.background),
+        child: SafeArea(
+          child: user == null
+              ? _buildList(context, const {}, 'lesson_01')
+              : FutureBuilder<UserModel?>(
+                  future: FirebaseService().getUserData(user.uid),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator(color: AppColors.accent));
+                    }
+                    final data = snapshot.data;
+                    final progress = data?.lessonProgress ?? const {};
+                    final current = data?.currentLessonId ?? 'lesson_01';
+                    return _buildList(context, progress, current);
+                  },
                 ),
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              padding: const EdgeInsets.all(20),
-              child: Row(
-                children: [
-                  Container(
-                    width: 50,
-                    height: 50,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.9),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '${i + 1}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFFFF8A3D),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          lesson.title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          lesson.summary,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 18),
-                ],
-              ),
-            ),
-          );
-        },
+        ),
       ),
+    );
+  }
+
+  Widget _buildList(BuildContext context, Map<String, dynamic> progress, String currentLessonId) {
+    return ListView.separated(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      itemCount: allLessons.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 16),
+      itemBuilder: (context, i) {
+        final lesson = allLessons[i];
+        final lessonId = _lessonId(i);
+        final unlocked = _isUnlocked(lessonId: lessonId, currentLessonId: currentLessonId, progress: progress);
+        final completed = (progress[lessonId]?['completed'] ?? false) == true;
+        final gradient = unlocked
+          ? [AppColors.accent.withValues(alpha: 0.9), AppColors.accentSecondary.withValues(alpha: 0.9)]
+          : [AppColors.surface, AppColors.surface];
+        final textColor = unlocked ? AppColors.textPrimary : AppColors.textMuted;
+        return InkWell(
+          onTap: unlocked
+              ? () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LessonDetailScreen(lesson: lesson, lessonId: lessonId),
+                    ),
+                  )
+              : () => ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Locked. Pass the previous quiz to unlock.')),
+                  ),
+          borderRadius: BorderRadius.circular(18),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: [
+                BoxShadow(
+                  color: unlocked ? AppColors.accent.withValues(alpha: 0.28) : Colors.black.withValues(alpha: 0.25),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  width: 50,
+                  height: 50,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${i + 1}',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: unlocked ? AppColors.accent : AppColors.textMuted,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lesson.title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        lesson.summary,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: textColor.withValues(alpha: 0.9),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (completed)
+                  const Icon(Icons.check_circle, color: Colors.white, size: 22)
+                else if (!unlocked)
+                  Icon(Icons.lock, color: textColor, size: 20)
+                else
+                  const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 18),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

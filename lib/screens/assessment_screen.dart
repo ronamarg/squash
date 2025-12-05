@@ -9,6 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/config.dart';
 import 'difficulty_screen.dart';
 import 'main_menu.dart';
+import '../config/theme.dart';
 
 class AssessmentScreen extends StatefulWidget {
   const AssessmentScreen({super.key});
@@ -144,65 +145,77 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     return PopScope(
       canPop: false,
       child: Scaffold(
-        backgroundColor: const Color(0xFFFFFBF5),
-        body: SafeArea(
-          child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-                  child: Column(
-                    children: [
-                      // Persistent top logo (matches onboarding style)
-                      Image.asset(
-                        '_img/iconSqTEXT.png',
-                        height: 120,
-                        fit: BoxFit.contain,
-                      ),
-                      const SizedBox(height: 8),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Question ${_index + 1} of ${_questions.length}',
-                              style: const TextStyle(color: Colors.grey, fontSize: 14),
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              q['question'],
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                                height: 1.3,
+        backgroundColor: AppColors.background,
+        body: Container(
+          decoration: const BoxDecoration(gradient: AppGradients.background),
+          child: SafeArea(
+            child: _loading
+                ? const Center(child: CircularProgressIndicator(color: AppColors.accent))
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                    child: Column(
+                      children: [
+                        Image.asset(
+                          '_img/iconSqTEXT.png',
+                          height: 120,
+                          fit: BoxFit.contain,
+                        ),
+                        const SizedBox(height: 8),
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Question ${_index + 1} of ${_questions.length}',
+                                style: AppTextStyles.bodyMuted,
                               ),
-                            ),
-                            const SizedBox(height: 32),
-                            ...List.generate(randomizedOptions.length, (i) {
-                              final opt = randomizedOptions[i];
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                child: ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.orange,
-                                    minimumSize: const Size.fromHeight(54),
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
+                              const SizedBox(height: 16),
+                              Text(
+                                q['question'],
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.headingL.copyWith(fontSize: 24),
+                              ),
+                              const SizedBox(height: 32),
+                              ...List.generate(randomizedOptions.length, (i) {
+                                final opt = randomizedOptions[i];
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: AppGradients.cardAccent,
                                       borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppColors.accent.withValues(alpha: 0.35),
+                                          blurRadius: 14,
+                                          offset: const Offset(0, 8),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.transparent,
+                                        shadowColor: Colors.transparent,
+                                        minimumSize: const Size.fromHeight(54),
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(16),
+                                        ),
+                                        textStyle: AppTextStyles.button.copyWith(fontSize: 16),
+                                      ),
+                                      onPressed: () => _answer(opt),
+                                      child: Text(opt),
                                     ),
                                   ),
-                                  onPressed: () => _answer(opt),
-                                  child: Text(opt, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-                                ),
-                              );
-                            }),
-                          ],
+                                );
+                              }),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
+          ),
         ),
       ),
     );

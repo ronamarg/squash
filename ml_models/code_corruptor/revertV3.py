@@ -95,9 +95,9 @@ Guides to setting difficulty:
             self.model_path = model_path
         
         # MAXIMUM CORRUPTION MODE - Make code seriously broken
-        self.num_passes = 2  # Reduced for speed, model not helping much anyway
-        self.temperature = 2.5  # EXTREME temperature for maximum chaos
-        self.length_penalty = 0.3  # Very low penalty = aggressive changes
+        self.num_passes = 2  
+        self.temperature = 2.5 
+        self.length_penalty = 0.8 
         
         # Lazy load T5 model
         self.t5_model = None
@@ -170,14 +170,13 @@ Guides to setting difficulty:
                 length_penalty=self.length_penalty,
                 no_repeat_ngram_size=3  # Prevent line repetition
             )
-            print(f"[DEBUG] Pass {i+1}/{self.num_passes} complete")
+            #print(f"[DEBUG] Pass {i+1}/{self.num_passes} complete")
             # 70% chance to flip an operator after each pass
             if random.random() < operator_flip_chance:
                 flipped, did_flip = flip_operator(corrupted)
                 if did_flip:
                     corrupted = flipped
-                    print(f"[DEBUG] Operator flipped after pass {i+1}")
-        # ALWAYS force a guaranteed semantic bug, not just when output matches input
+                    #print(f"[DEBUG] Operator flipped after pass {i+1}")
         def _normalize(s: str) -> str:
             return re.sub(r"\s+", "", s or "").strip()
         def weaken_first_if_cond(src: str):
@@ -192,8 +191,7 @@ Guides to setting difficulty:
             start, end = m.span()
             return src[:start] + new_line + src[end:], True
         
-        # ALWAYS force MULTIPLE semantic bugs since model isn't helping
-        print(f"[DEBUG] Forcing multiple guaranteed semantic bugs...")
+        #print(f"[DEBUG] Forcing multiple guaranteed semantic bugs...")
         
         # 1. Try operator flip first
         forced, did = flip_operator(corrupted)

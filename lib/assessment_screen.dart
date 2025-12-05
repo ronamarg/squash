@@ -51,7 +51,9 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
 
   Future<void> _classifyAndNavigate() async {
     final payload = <String, int>{};
-    for (int i = 0; i < _answers.length; i++) payload['q${i + 1}'] = _answers[i];
+    for (int i = 0; i < _answers.length; i++) {
+      payload['q${i + 1}'] = _answers[i];
+    }
     
     try {
       final url = Uri.parse('${Config.skillApiBase}/predict_level');
@@ -139,8 +141,8 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
     final q = _questions[_index];
     final randomizedOptions = _getRandomizedOptions(q);
     
-    return WillPopScope(
-      onWillPop: () async => false, // Prevent back navigation
+    return PopScope(
+      canPop: false, // Prevent back navigation
       child: Scaffold(
         backgroundColor: const Color(0xFFFFFBF5),
         body: SafeArea(

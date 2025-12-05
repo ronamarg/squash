@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 // NOTE: Use the correct IP address for your running Flask service
 import '../config/config.dart';
 import 'quiz_screen.dart';
+import '../config/theme.dart';
 // Build the full endpoint at runtime (const concatenation with static const is okay)
 final String _apiUrl = '${Config.apiBase}/predict_level';
 
@@ -118,6 +119,8 @@ class DifficultyScreen extends StatelessWidget {
       debugPrint('Network Error: Could not reach scoring service. Defaulting to novice. Error: $e');
     }
 
+    if (!context.mounted) return;
+
     // --- FINAL FIX: Navigate to the FULL QUIZ using the determined level ---
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -134,64 +137,79 @@ class DifficultyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Image.asset(
-          '_img/iconSqTEXT.png',
-          height: 40,
-          fit: BoxFit.contain,
-        ),
-        backgroundColor: Colors.orange,
+        title: const Text('Skill Assessment'),
+        backgroundColor: AppColors.background,
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch, 
-          children: [
-            // Logo at the top - larger size
-            Center(
-              child: Image.asset(
-                '_img/iconSqTEXT.png',
-                height: 180,
-                fit: BoxFit.contain,
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppGradients.background),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch, 
+            children: [
+              Center(
+                child: Image.asset(
+                  '_img/iconSqTEXT.png',
+                  height: 160,
+                  fit: BoxFit.contain,
+                ),
               ),
-            ),
-            const SizedBox(height: 48),
-            const Text(
-              'Run Initial Assessment',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.orange),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Your knowledge level will be determined automatically based on 5 questions.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-            const SizedBox(height: 60),
+              const SizedBox(height: 36),
+              Text(
+                'Run Initial Assessment',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.headingM.copyWith(color: AppColors.textPrimary),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'We will determine your level automatically based on a quick set of questions.',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.body,
+              ),
+              const SizedBox(height: 40),
 
-            // --- ASSESSMENT BUTTON ---
-            ElevatedButton.icon(
-              onPressed: () => _startAssessment(context), // Call the async API function
-              icon: const Icon(Icons.arrow_forward_ios),
-              label: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12.0),
-                child: Text('Start Assessment', style: TextStyle(fontSize: 18)),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: AppGradients.cardAccent,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton.icon(
+                  onPressed: () => _startAssessment(context),
+                  icon: const Icon(Icons.arrow_forward_ios, color: Colors.white),
+                  label: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 14.0),
+                    child: Text('Start Assessment'),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    textStyle: AppTextStyles.button,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
+                ),
               ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 5,
-              ),
-            ),
-            
-            const SizedBox(height: 40),
+              
+              const SizedBox(height: 32),
 
-            // --- MANUAL DIFFICULTY CARDS (Kept for completeness, though assessment overrides them) ---
-            // Note: Since this is now a StatelessWidget, the old _buildDifficultyCard method 
-            // should be integrated or recreated if needed, but for simplicity, we focus on the assessment.
-          ],
+              Text(
+                'We use your answers to tailor quizzes and lessons.',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyMuted,
+              ),
+            ],
+          ),
+          ),
         ),
       ),
     );

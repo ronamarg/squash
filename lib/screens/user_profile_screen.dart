@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import '../config/theme.dart';
 import '../services/firebase_service.dart';
 import '../models/user_model.dart';
 import '../main.dart'; // For AuthWrapper after logout
 import 'assessment_screen.dart';
 
 class UserProfileScreen extends StatefulWidget {
-  const UserProfileScreen({super.key});
+  final bool useDark;
+
+  const UserProfileScreen({super.key, this.useDark = false});
 
   @override
   State<UserProfileScreen> createState() => _UserProfileScreenState();
@@ -85,41 +88,47 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final bg = widget.useDark ? AppColors.background : const Color(0xFFFFFBF5);
+    final appBarColor = widget.useDark ? AppColors.background : const Color(0xFFFF8A3D);
+    final textPrimary = widget.useDark ? Colors.white : const Color(0xFF424242);
+    final textSecondary = widget.useDark ? AppColors.textMuted : Colors.grey[600];
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF5),
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text('Profile', style: TextStyle(fontWeight: FontWeight.w600)),
-        backgroundColor: const Color(0xFFFF8A3D),
+        backgroundColor: appBarColor,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _userData == null
-              ? const Center(child: Text('No user data found'))
-              : SingleChildScrollView(
+      body: SafeArea(
+        child: _isLoading
+            ? const Center(child: CircularProgressIndicator())
+            : _userData == null
+                ? const Center(child: Text('No user data found'))
+                : SingleChildScrollView(
                   padding: const EdgeInsets.all(24.0),
                   child: Column(
                     children: [
                       // Profile Picture
-                      CircleAvatar(
+                        CircleAvatar(
                         radius: 60,
-                        backgroundColor: Colors.orange.shade100,
+                        backgroundColor: widget.useDark ? AppColors.card : Colors.orange.shade100,
                         backgroundImage: _userData!.photoUrl != null
-                            ? NetworkImage(_userData!.photoUrl!)
-                            : null,
+                          ? NetworkImage(_userData!.photoUrl!)
+                          : null,
                         child: _userData!.photoUrl == null
-                            ? const Icon(Icons.person, size: 60, color: Colors.orange)
-                            : null,
-                      ),
+                          ? Icon(Icons.person, size: 60, color: widget.useDark ? Colors.white : Colors.orange)
+                          : null,
+                        ),
                       const SizedBox(height: 24),
 
                       // Username
                       Text(
                         _userData!.username,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF424242),
+                          color: textPrimary,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -129,7 +138,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         _userData!.email,
                         style: TextStyle(
                           fontSize: 16,
-                          color: Colors.grey[600],
+                          color: textSecondary,
                         ),
                       ),
                       const SizedBox(height: 32),
@@ -193,7 +202,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             style: TextStyle(fontSize: 16),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF8A3D),
+                            backgroundColor: appBarColor,
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -227,17 +236,18 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                     ],
                   ),
                 ),
+      ),
     );
   }
 
   Widget _buildStatsCard(String label, String value, IconData icon, Color color) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: widget.useDark ? AppColors.surface : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: widget.useDark ? Colors.black.withValues(alpha: 0.35) : Colors.black.withValues(alpha: 0.06),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -251,8 +261,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  color.withValues(alpha: 0.2),
-                  color.withValues(alpha: 0.1),
+                  color.withValues(alpha: widget.useDark ? 0.25 : 0.2),
+                  color.withValues(alpha: widget.useDark ? 0.12 : 0.1),
                 ],
               ),
               borderRadius: BorderRadius.circular(14),
@@ -268,7 +278,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   label,
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey[600],
+                    color: widget.useDark ? AppColors.textMuted : Colors.grey[600],
                     fontWeight: FontWeight.w500,
                     letterSpacing: 0.3,
                   ),
@@ -276,10 +286,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 const SizedBox(height: 6),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF2D2D2D),
+                    color: widget.useDark ? Colors.white : const Color(0xFF2D2D2D),
                   ),
                 ),
               ],

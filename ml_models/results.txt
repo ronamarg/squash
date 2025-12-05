@@ -1,0 +1,31 @@
+## Results Snapshot
+
+### 1. Skill Classifier (RandomForest)
+*Latency Performance:*
+- p50 latency: 0.0003 ms
+- p90 latency: 0.0003 ms
+- samples: 200
+- throughput: ~3M predictions/second
+
+*Model Accuracy (Test Set: 6,060 samples):*
+- Accuracy: 99.57%
+- Precision: 0.9957
+- Recall: 0.9957
+- F1-Score: 0.9957
+
+### 2. Transformer (T5) Corruptor
+*Latency Performance:*
+- p50 latency: 2,234.66 ms (~2.2 seconds)
+- p90 latency: 5,877.03 ms (~5.9 seconds)
+- samples: 30
+
+*Generation Quality (Test Set: 5 samples):*
+- BLEU Score: 0.3713 (±0.2078)
+- ROUGE-1: 0.9667 (±0.0422)
+- ROUGE-2: 0.9316 (±0.0919)
+- ROUGE-L: 0.9667 (±0.0422)
+- Exact Match: 0.0000
+
+*Notes:* CPU-based inference; high ROUGE scores indicate strong structural similarity while
+ lower BLEU/zero EM shows creative bug generation.
+ 

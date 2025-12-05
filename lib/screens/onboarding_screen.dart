@@ -9,6 +9,7 @@ import '../config/config.dart';
 import 'difficulty_screen.dart';
 import 'main_menu.dart';
 import '../services/firebase_service.dart';
+import '../config/theme.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -153,18 +154,18 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.school, size: 80, color: Colors.orange.shade300),
+          Icon(Icons.school, size: 80, color: AppColors.accent),
           const SizedBox(height: 32),
           Text(
             data['title']!,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.orange),
+            style: AppTextStyles.headingM,
           ),
           const SizedBox(height: 16),
           Text(
             data['subtitle']!,
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16, color: Colors.black87),
+            style: AppTextStyles.body,
           ),
         ],
       ),
@@ -198,17 +199,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 24),
           Text(
             'Proficiency Assessment',
-            style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.orange),
+            style: AppTextStyles.headingM.copyWith(color: AppColors.accent),
           ),
           const SizedBox(height: 20),
           Text(
             q['question'],
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-              height: 1.3,
-            ),
+            style: AppTextStyles.headingL.copyWith(fontSize: 22),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 28),
@@ -216,41 +212,57 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             final opt = randomizedOptions[i];
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 48),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: AppGradients.cardAccent,
+                  borderRadius: BorderRadius.circular(14),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.accent.withValues(alpha: 0.35),
+                      blurRadius: 14,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                onPressed: () {
-                  bool correct = opt == q['correct'];
-                  _answers.add(correct ? 1 : 0);
-                  bool finished = false;
-                  setState(() {
-                    if (_assessmentIndex < _assessmentQuestions.length - 1) {
-                      _assessmentIndex++;
-                    } else {
-                      _showAssessment = false;
-                      finished = true;
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(double.infinity, 48),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    textStyle: AppTextStyles.button.copyWith(fontSize: 16),
+                  ),
+                  onPressed: () {
+                    bool correct = opt == q['correct'];
+                    _answers.add(correct ? 1 : 0);
+                    bool finished = false;
+                    setState(() {
+                      if (_assessmentIndex < _assessmentQuestions.length - 1) {
+                        _assessmentIndex++;
+                      } else {
+                        _showAssessment = false;
+                        finished = true;
+                      }
+                    });
+                    if (finished) {
+                      try {
+                        _classifyUser();
+                      } catch (e) {
+                        debugPrint('Error classifying user: $e');
+                      }
                     }
-                  });
-                  if (finished) {
-                    // call async work after state update to avoid navigation during setState
-                    // wrap in try/catch to prevent uncaught exceptions from crashing the app
-                    try {
-                      _classifyUser();
-                    } catch (e) {
-                      debugPrint('Error classifying user: $e');
-                      // Removed SnackBar to avoid covering bottom controls
-                    }
-                  }
-                },
-                child: Text(opt, style: const TextStyle(fontSize: 16)),
+                  },
+                  child: Text(opt, style: const TextStyle(fontSize: 16)),
+                ),
               ),
             );
           }),
           const SizedBox(height: 24),
-          Text('Question ${_assessmentIndex + 1} of ${_assessmentQuestions.length}', style: const TextStyle(color: Colors.grey)),
+          Text(
+            'Question ${_assessmentIndex + 1} of ${_assessmentQuestions.length}',
+            style: AppTextStyles.bodyMuted,
+          ),
         ],
       ),
     );
@@ -265,91 +277,100 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF5),
-      body: SafeArea(
-        child: _showAssessment
-            ? _buildAssessment()
-            : Column(
-                children: [
-                  const SizedBox(height: 16),
-                  // Persistent logo at top so page text centers vertically beneath it
-                  Image.asset(
-                    '_img/iconSqTEXT.png',
-                    height: 140,
-                    fit: BoxFit.contain,
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _controller,
-                      itemCount: _pages.length,
-                      onPageChanged: (i) => setState(() => _page = i),
-                      itemBuilder: (context, index) => _buildPage(_pages[index]),
+      backgroundColor: AppColors.background,
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppGradients.background),
+        child: SafeArea(
+          child: _showAssessment
+              ? _buildAssessment()
+              : Column(
+                  children: [
+                    const SizedBox(height: 16),
+                    Image.asset(
+                      '_img/iconSqTEXT.png',
+                      height: 140,
+                      fit: BoxFit.contain,
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                          onPressed: () {
-                            // Navigate to the dedicated Assessment screen to avoid rendering issues
-                              // Hide any soft keyboard/IME before navigation to avoid IME race conditions
+                    const SizedBox(height: 8),
+                    Expanded(
+                      child: PageView.builder(
+                        controller: _controller,
+                        itemCount: _pages.length,
+                        onPageChanged: (i) => setState(() => _page = i),
+                        itemBuilder: (context, index) => _buildPage(_pages[index]),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
+                            onPressed: () {
                               try {
                                 FocusScope.of(context).unfocus();
                               } catch (_) {}
                               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AssessmentScreen()));
-                          },
-                          child: const Text('Skip', style: TextStyle(color: Color(0xFFFF8A3D), fontWeight: FontWeight.w600)),
-                        ),
-                        Row(
-                          children: List.generate(
-                            _pages.length,
-                            (i) => Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                              width: _page == i ? 18 : 8,
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: _page == i ? Colors.orange : Colors.orange.shade100,
-                                borderRadius: BorderRadius.circular(8),
+                            },
+                            child: const Text('Skip', style: TextStyle(color: AppColors.accent, fontWeight: FontWeight.w600)),
+                          ),
+                          Row(
+                            children: List.generate(
+                              _pages.length,
+                              (i) => Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                                width: _page == i ? 18 : 8,
+                                height: 8,
+                                decoration: BoxDecoration(
+                                  color: _page == i ? AppColors.accent : AppColors.accent.withValues(alpha: 0.3),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            if (_page == _pages.length - 1) {
-                              // Launch the standalone assessment screen (avoids toggling internal flags)
-                                // Hide any soft keyboard/IME before navigation to avoid IME race conditions
-                                try {
-                                  FocusScope.of(context).unfocus();
-                                } catch (_) {}
-                                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AssessmentScreen()));
-                              // Removed SnackBar (Starting assessment)
-                              // ignore: avoid_print
-                              print('Onboarding: Start Assessment pressed (navigated to AssessmentScreen)');
-                            } else {
-                              _controller.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
-                              // Removed SnackBar (Next page)
-                              // ignore: avoid_print
-                              print('Onboarding: Next pressed, moving to page ${_page + 1}');
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFFF8A3D),
-                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
+                          DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: AppGradients.cardAccent,
                               borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.accent.withValues(alpha: 0.35),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: ElevatedButton(
+                              onPressed: () {
+                                if (_page == _pages.length - 1) {
+                                  try {
+                                    FocusScope.of(context).unfocus();
+                                  } catch (_) {}
+                                  Navigator.of(context).push(MaterialPageRoute(builder: (_) => const AssessmentScreen()));
+                                  debugPrint('Onboarding: Start Assessment pressed (navigated to AssessmentScreen)');
+                                } else {
+                                  _controller.nextPage(duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                                  debugPrint('Onboarding: Next pressed, moving to page ${_page + 1}');
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                shadowColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                textStyle: AppTextStyles.button.copyWith(fontSize: 16),
+                              ),
+                              child: Text(_page == _pages.length - 1 ? 'Start Assessment' : 'Next'),
                             ),
                           ),
-                          child: Text(_page == _pages.length - 1 ? 'Start Assessment' : 'Next'),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+        ),
       ),
     );
   }

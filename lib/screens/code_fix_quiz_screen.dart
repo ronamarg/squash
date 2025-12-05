@@ -7,12 +7,14 @@ import 'package:http/http.dart' as http;
 import '../services/ollama_service.dart';
 
 import '../config/config.dart';
+import '../config/theme.dart';
 import '../services/firebase_service.dart';
 
 class CodeFixQuizScreen extends StatefulWidget {
   final String difficulty;
+  final bool useDark;
 
-  const CodeFixQuizScreen({super.key, required this.difficulty});
+  const CodeFixQuizScreen({super.key, required this.difficulty, this.useDark = false});
 
   @override
   State<CodeFixQuizScreen> createState() => _CodeFixQuizScreenState();
@@ -236,8 +238,19 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final dark = widget.useDark;
+    final bg = dark ? AppColors.background : const Color(0xFFFFFBF5);
+    final card = dark ? AppColors.card : Colors.white;
+    final textPrimary = dark ? Colors.white : const Color(0xFF2D2D2D);
+    final fieldFill = dark ? AppColors.surface : const Color(0xFFF8F9FA);
+    final fieldText = dark ? Colors.white : Colors.black87;
+    final fieldHint = dark ? AppColors.textMuted : Colors.grey.shade500;
+    final borderColor = dark ? AppColors.outline : Colors.grey.shade300;
+    final appBarColor = dark ? AppColors.background : const Color(0xFFFF8A3D);
+    final pillColor = dark ? Colors.white.withValues(alpha: 0.12) : Colors.white.withValues(alpha: 0.2);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFFFFBF5),
+      backgroundColor: bg,
       appBar: AppBar(
         title: const Text(
           'Squash',
@@ -247,7 +260,7 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
             color: Colors.white,
           ),
         ),
-        backgroundColor: const Color(0xFFFF8A3D),
+        backgroundColor: appBarColor,
         elevation: 0,
         centerTitle: true,
         actions: [
@@ -257,7 +270,7 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
+                  color: pillColor,
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
@@ -269,10 +282,11 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
+      body: SafeArea(
+        child: _loading
+            ? const Center(child: CircularProgressIndicator())
+            : _error != null
+                ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -292,18 +306,14 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFFFF8A3D).withValues(alpha: 0.1),
-                              const Color(0xFFFFB366).withValues(alpha: 0.05),
-                            ],
-                          ),
+                          color: card,
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: borderColor.withValues(alpha: 0.4)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 8,
-                              offset: const Offset(0, 2),
+                              color: dark ? Colors.black.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.06),
+                              blurRadius: 12,
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
@@ -322,13 +332,13 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                                   child: const Icon(Icons.bug_report, color: Colors.white, size: 20),
                                 ),
                                 const SizedBox(width: 12),
-                                const Expanded(
+                                Expanded(
                                   child: Text(
                                     'Fix the buggy code below:',
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2D2D2D),
+                                      color: textPrimary,
                                     ),
                                   ),
                                 ),
@@ -338,13 +348,14 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: dark ? AppColors.surface : Colors.white,
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: borderColor.withValues(alpha: 0.6)),
                               ),
                               child: Text(
                                 'Difficulty: ${widget.difficulty.toUpperCase()}',
-                                style: const TextStyle(
-                                  color: Color(0xFFFF8A3D),
+                                style: TextStyle(
+                                  color: AppColors.accent,
                                   fontSize: 13,
                                   fontWeight: FontWeight.w600,
                                   letterSpacing: 0.5,
@@ -436,33 +447,35 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                       const SizedBox(height: 20),
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: card,
                           borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: borderColor.withValues(alpha: 0.6)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.06),
+                              color: dark ? Colors.black.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.06),
                               blurRadius: 12,
-                              offset: const Offset(0, 4),
+                              offset: const Offset(0, 6),
                             ),
                           ],
                         ),
                         child: TextField(
                           controller: _answerController,
                           maxLines: 15,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontFamily: 'monospace',
                             fontSize: 14,
                             height: 1.5,
+                            color: fieldText,
                           ),
                           decoration: InputDecoration(
                             hintText: 'Edit the code here...',
-                            hintStyle: TextStyle(color: Colors.grey.shade400),
+                            hintStyle: TextStyle(color: fieldHint),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(16),
                               borderSide: BorderSide.none,
                             ),
                             filled: true,
-                            fillColor: const Color(0xFFF8F9FA),
+                            fillColor: fieldFill,
                             contentPadding: const EdgeInsets.all(16),
                           ),
                           enabled: !_showingResult,
@@ -490,11 +503,11 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: card,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.06),
+                                color: dark ? Colors.black.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.06),
                                 blurRadius: 8,
                                 offset: const Offset(0, 3),
                               ),
@@ -503,11 +516,11 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text('Your Output', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text('Your Output', style: TextStyle(fontWeight: FontWeight.bold, color: textPrimary)),
                               const SizedBox(height: 6),
                               _buildOutputBox(_userStdout, _userStderr),
                               const SizedBox(height: 12),
-                              const Text('Expected Output', style: TextStyle(fontWeight: FontWeight.bold)),
+                              Text('Expected Output', style: TextStyle(fontWeight: FontWeight.bold, color: textPrimary)),
                               const SizedBox(height: 6),
                               _buildOutputBox(_expectedStdout, _expectedStderr),
                             ],
@@ -743,10 +756,12 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                     ],
                   ),
                 ),
+      ),
     );
   }
 
   Widget _buildOutputBox(String? stdoutText, String? stderrText) {
+    final dark = widget.useDark;
     String firstStdoutLine = '';
     if ((stdoutText ?? '').isNotEmpty) {
       final lines = stdoutText!.split(RegExp(r'\r?\n'));
@@ -760,8 +775,12 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
       conciseErr = errLine.trim();
     }
     final ok = conciseErr.isEmpty;
-    final bg = ok ? Colors.green.shade50 : Colors.red.shade50;
-    final fg = ok ? Colors.green.shade800 : Colors.red.shade800;
+    final bg = ok
+      ? (dark ? const Color(0xFF1F2D23) : Colors.green.shade50)
+      : (dark ? const Color(0xFF2F1F1F) : Colors.red.shade50);
+    final fg = ok
+      ? (dark ? Colors.green.shade200 : Colors.green.shade800)
+      : (dark ? Colors.red.shade200 : Colors.red.shade800);
     final content = (firstStdoutLine.isEmpty && conciseErr.isEmpty)
         ? '(no output)'
         : (firstStdoutLine + (conciseErr.isNotEmpty ? "\nERR: $conciseErr" : ''));

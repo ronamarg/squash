@@ -7,6 +7,8 @@ class UserModel {
   final String? photoUrl;
   final String skillClassification; // 'novice', 'intermediate', 'experienced'
   final int progressionValue; // Updated after each practice run
+  final String currentLessonId; // gating for lessons (e.g., 'lesson_01')
+  final Map<String, dynamic> lessonProgress; // map of lessonId -> {completed: bool, bestScore: int, completedAt: Timestamp}
   final DateTime joinDate;
   final DateTime lastLogin;
   final int totalQuizzesTaken; // For statistics
@@ -19,11 +21,13 @@ class UserModel {
     this.photoUrl,
     this.skillClassification = 'novice',
     this.progressionValue = 0,
+    this.currentLessonId = 'lesson_01',
+    Map<String, dynamic>? lessonProgress,
     required this.joinDate,
     required this.lastLogin,
     this.totalQuizzesTaken = 0,
     this.totalScore = 0,
-  });
+  }) : lessonProgress = lessonProgress ?? const {};
 
   // Convert UserModel to Map for Firestore
   Map<String, dynamic> toMap() {
@@ -34,6 +38,8 @@ class UserModel {
       'photoUrl': photoUrl,
       'skillClassification': skillClassification,
       'progressionValue': progressionValue,
+      'currentLessonId': currentLessonId,
+      'lessonProgress': lessonProgress,
       'joinDate': Timestamp.fromDate(joinDate),
       'lastLogin': Timestamp.fromDate(lastLogin),
       'totalQuizzesTaken': totalQuizzesTaken,
@@ -50,6 +56,8 @@ class UserModel {
       photoUrl: map['photoUrl'],
       skillClassification: map['skillClassification'] ?? map['userLevel'] ?? 'novice', // Backward compatible
       progressionValue: (map['progressionValue'] ?? 0).clamp(0, 1000),
+      currentLessonId: map['currentLessonId'] ?? 'lesson_01',
+      lessonProgress: Map<String, dynamic>.from(map['lessonProgress'] ?? {}),
       joinDate: (map['joinDate'] ?? map['createdAt'] ?? Timestamp.now()).toDate(),
       lastLogin: (map['lastLogin'] ?? Timestamp.now()).toDate(),
       totalQuizzesTaken: map['totalQuizzesTaken'] ?? 0,
@@ -65,6 +73,8 @@ class UserModel {
     String? photoUrl,
     String? skillClassification,
     int? progressionValue,
+    String? currentLessonId,
+    Map<String, dynamic>? lessonProgress,
     DateTime? joinDate,
     DateTime? lastLogin,
     int? totalQuizzesTaken,
@@ -77,6 +87,8 @@ class UserModel {
       photoUrl: photoUrl ?? this.photoUrl,
       skillClassification: skillClassification ?? this.skillClassification,
       progressionValue: progressionValue ?? this.progressionValue,
+      currentLessonId: currentLessonId ?? this.currentLessonId,
+      lessonProgress: lessonProgress ?? this.lessonProgress,
       joinDate: joinDate ?? this.joinDate,
       lastLogin: lastLogin ?? this.lastLogin,
       totalQuizzesTaken: totalQuizzesTaken ?? this.totalQuizzesTaken,
