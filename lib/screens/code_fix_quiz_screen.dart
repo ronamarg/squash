@@ -531,8 +531,8 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                       if (_showingResult) ...[
                         Card(
                           color: _currentScore! >= 70
-                              ? Colors.green.shade50
-                              : Colors.orange.shade50,
+                              ? Colors.green.shade900.withValues(alpha: 0.3)
+                              : Colors.orange.shade900.withValues(alpha: 0.3),
                           child: Padding(
                             padding: const EdgeInsets.all(16.0),
                             child: Column(
@@ -543,8 +543,8 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                     color: _currentScore! >= 70
-                                        ? Colors.green.shade700
-                                        : Colors.orange.shade700,
+                                        ? Colors.green.shade300
+                                        : Colors.orange.shade300,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
@@ -565,8 +565,8 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                                         style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           color: _latestProgressionDelta! >= 0
-                                              ? Colors.green.shade700
-                                              : Colors.red.shade700,
+                                              ? Colors.green.shade300
+                                              : Colors.red.shade300,
                                         ),
                                       ),
                                     ],
@@ -586,7 +586,7 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
+                                    color: AppColors.surface,
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
