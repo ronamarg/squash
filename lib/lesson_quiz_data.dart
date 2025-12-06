@@ -254,4 +254,106 @@ final Map<String, List<LessonQuizQuestion>> lessonQuizzes = {
       correct: '[\\w\\.-]+@[\\w\\.-]+',
     ),
   ],
+  'lesson_15': const [
+    LessonQuizQuestion(
+      question: 'What keyword starts error handling?',
+      options: ['catch', 'try', 'handle', 'error'],
+      correct: 'try',
+    ),
+    LessonQuizQuestion(
+      question: 'What exception is raised when dividing by zero?',
+      options: ['ValueError', 'TypeError', 'ZeroDivisionError', 'MathError'],
+      correct: 'ZeroDivisionError',
+    ),
+    LessonQuizQuestion(
+      question: 'The finally block runs when?',
+      options: ['Only on error', 'Only on success', 'Always', 'Never'],
+      correct: 'Always',
+    ),
+  ],
+  'lesson_16': const [
+    LessonQuizQuestion(
+      question: 'Which mode opens a file for writing (overwrites)?',
+      options: ['"r"', '"w"', '"a"', '"x"'],
+      correct: '"w"',
+    ),
+    LessonQuizQuestion(
+      question: 'Why use "with open(...)" instead of just open()?',
+      options: ['Faster', 'Auto-closes file', 'Required by Python', 'Prevents errors'],
+      correct: 'Auto-closes file',
+    ),
+    LessonQuizQuestion(
+      question: 'f.read() returns the file contents as?',
+      options: ['List', 'String', 'Dict', 'Bytes'],
+      correct: 'String',
+    ),
+  ],
+  'lesson_17': const [
+    LessonQuizQuestion(
+      question: '[x*2 for x in range(3)] produces?',
+      options: ['[0, 1, 2]', '[0, 2, 4]', '[2, 4, 6]', '[1, 2, 3]'],
+      correct: '[0, 2, 4]',
+    ),
+    LessonQuizQuestion(
+      question: 'Add a filter in comprehension with?',
+      options: ['where', 'if', 'filter', 'when'],
+      correct: 'if',
+    ),
+    LessonQuizQuestion(
+      question: '[n for n in [1,2,3,4] if n > 2] returns?',
+      options: ['[1, 2]', '[3, 4]', '[2, 3, 4]', '[1, 2, 3]'],
+      correct: '[3, 4]',
+    ),
+  ],
+  'lesson_18': const [
+    LessonQuizQuestion(
+      question: 'Lambda functions are also called?',
+      options: ['Named functions', 'Anonymous functions', 'Class methods', 'Generators'],
+      correct: 'Anonymous functions',
+    ),
+    LessonQuizQuestion(
+      question: 'lambda x: x * 2 applied to 5 gives?',
+      options: ['5', '7', '10', '25'],
+      correct: '10',
+    ),
+    LessonQuizQuestion(
+      question: 'sorted(items, key=lambda x: x[1]) sorts by?',
+      options: ['First element', 'Second element', 'Length', 'Alphabetically'],
+      correct: 'Second element',
+    ),
+  ],
+  'lesson_19': const [
+    LessonQuizQuestion(
+      question: 'Which library is commonly used for HTTP requests?',
+      options: ['http', 'requests', 'urllib', 'api'],
+      correct: 'requests',
+    ),
+    LessonQuizQuestion(
+      question: 'response.json() does what?',
+      options: ['Sends JSON', 'Parses JSON to dict', 'Validates JSON', 'Prints JSON'],
+      correct: 'Parses JSON to dict',
+    ),
+    LessonQuizQuestion(
+      question: 'HTTP status code 200 means?',
+      options: ['Error', 'Not found', 'Success', 'Redirect'],
+      correct: 'Success',
+    ),
+  ],
+  'lesson_20': const [
+    LessonQuizQuestion(
+      question: 'The best first debugging step is usually?',
+      options: ['Rewrite everything', 'Add print statements', 'Delete the code', 'Ignore it'],
+      correct: 'Add print statements',
+    ),
+    LessonQuizQuestion(
+      question: 'In a traceback, where is the actual error location?',
+      options: ['Top', 'Middle', 'Bottom', 'Random'],
+      correct: 'Bottom',
+    ),
+    LessonQuizQuestion(
+      question: 'range(5) gives values from?',
+      options: ['1 to 5', '0 to 5', '0 to 4', '1 to 4'],
+      correct: '0 to 4',
+    ),
+  ],
 };

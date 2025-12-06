@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import '../services/firebase_service.dart';
-import '../models/user_model.dart';
-import 'lesson_detail_screen.dart';
+
 import '../config/theme.dart';
+import '../models/user_model.dart';
+import '../services/firebase_service.dart';
+import 'lesson_detail_screen.dart';
 
 class Lesson {
   final String title;
@@ -452,6 +453,212 @@ Core ideas
 
 Mini-check:
 - Write a regex that matches three letters followed by two digits (e.g., ABC12) and test it.
+''',
+  ),
+
+  // --- MODULE 6: ADVANCED TOPICS ---
+
+  const Lesson(
+   title: '15. Error Handling',
+   summary: 'Catch exceptions so your program does not crash.',
+   content: r'''
+Why it matters: Real programs face bad input, missing files, and network issues.
+
+You will practice:
+- try/except blocks.
+- Catching specific exceptions.
+- The finally clause.
+
+Core ideas
+1) Basic try/except
+  try:
+     num = int(input("Number: "))
+     print(num * 2)
+  except ValueError:
+     print("That's not a valid number!")
+
+2) Multiple exceptions
+  try:
+     result = 10 / int(input("Divide by: "))
+  except ValueError:
+     print("Not a number")
+  except ZeroDivisionError:
+     print("Can't divide by zero")
+
+3) Finally (always runs)
+  try:
+     f = open("data.txt")
+     data = f.read()
+  except FileNotFoundError:
+     print("File missing")
+  finally:
+     print("Cleanup done")
+
+Mini-check:
+- Write a try/except that asks for age, converts to int, and prints "Invalid" on error.
+''',
+  ),
+
+  const Lesson(
+   title: '16. File I/O',
+   summary: 'Read from and write to files.',
+   content: r'''
+Why it matters: Persist data between program runs (logs, saves, configs).
+
+You will practice:
+- Opening files with `with`.
+- Reading and writing text.
+
+Core ideas
+1) Write to a file
+  with open("notes.txt", "w") as f:
+     f.write("Hello from Python!\n")
+     f.write("Line 2\n")
+
+2) Read entire file
+  with open("notes.txt", "r") as f:
+     content = f.read()
+     print(content)
+
+3) Read line by line
+  with open("notes.txt", "r") as f:
+     for line in f:
+        print(line.strip())
+
+Mini-check:
+- Write your name to a file, then read it back and print it.
+''',
+  ),
+
+  const Lesson(
+   title: '17. List Comprehensions',
+   summary: 'Build lists in one elegant line.',
+   content: r'''
+Why it matters: Comprehensions are Pythonic—shorter and often faster.
+
+You will practice:
+- Basic comprehensions.
+- Adding conditions.
+
+Core ideas
+1) Transform each item
+  nums = [1, 2, 3, 4, 5]
+  squares = [n * n for n in nums]
+  print(squares)  # [1, 4, 9, 16, 25]
+
+2) Filter with condition
+  evens = [n for n in nums if n % 2 == 0]
+  print(evens)  # [2, 4]
+
+3) Transform + filter
+  big_squares = [n * n for n in nums if n > 2]
+  print(big_squares)  # [9, 16, 25]
+
+Mini-check:
+- From `words = ["hi", "hello", "hey", "world"]`, create a list of words longer than 2 chars, uppercased.
+''',
+  ),
+
+  const Lesson(
+   title: '18. Lambda Functions',
+   summary: 'Small anonymous functions for quick tasks.',
+   content: r'''
+Why it matters: Lambdas are handy for sorting, filtering, and callbacks.
+
+You will practice:
+- Writing lambda expressions.
+- Using them with `sorted()` and `map()`.
+
+Core ideas
+1) Basic lambda
+  double = lambda x: x * 2
+  print(double(5))  # 10
+
+2) Sorting with key
+  players = [("Mario", 100), ("Luigi", 80), ("Peach", 120)]
+  by_score = sorted(players, key=lambda p: p[1])
+  print(by_score)
+
+3) Map with lambda
+  nums = [1, 2, 3]
+  tripled = list(map(lambda n: n * 3, nums))
+  print(tripled)  # [3, 6, 9]
+
+Mini-check:
+- Sort a list of names by their length using a lambda.
+''',
+  ),
+
+  const Lesson(
+   title: '19. Working with APIs',
+   summary: 'Fetch data from the web using requests.',
+   content: r'''
+Why it matters: APIs let your app talk to servers (weather, news, games).
+
+You will practice:
+- Making GET requests.
+- Parsing JSON responses.
+
+Core ideas
+1) Install requests (if needed)
+  # pip install requests
+
+2) Simple GET request
+  import requests
+  response = requests.get("https://api.github.com")
+  print(response.status_code)  # 200 = success
+
+3) Parse JSON
+  data = response.json()
+  print(data["current_user_url"])
+
+4) API with parameters
+  url = "https://api.example.com/search"
+  params = {"q": "python", "limit": 5}
+  r = requests.get(url, params=params)
+  results = r.json()
+
+Mini-check:
+- Fetch a public API and print one field from the JSON response.
+''',
+  ),
+
+  const Lesson(
+   title: '20. Debugging Techniques',
+   summary: 'Find and fix bugs like a pro.',
+   content: r'''
+Why it matters: Every programmer spends time debugging—do it efficiently.
+
+You will practice:
+- Using print debugging.
+- Reading error messages.
+- Common bug patterns.
+
+Core ideas
+1) Strategic print statements
+  def calculate(x, y):
+     print(f"DEBUG: x={x}, y={y}")  # <-- add this
+     result = x / y
+     print(f"DEBUG: result={result}")
+     return result
+
+2) Read the traceback (bottom up)
+  Traceback (most recent call last):
+    File "app.py", line 10, in <module>
+      calculate(5, 0)
+    File "app.py", line 4, in calculate
+      result = x / y
+  ZeroDivisionError: division by zero
+  # Line 4 is the problem!
+
+3) Common bugs to watch for
+  - Off-by-one errors (range(5) is 0-4, not 1-5)
+  - Forgetting to return a value
+  - Modifying a list while iterating
+  - Using = instead of ==
+
+Mini-check:
+- Given buggy code, add print statements to find where it fails.
 ''',
   ),
 ];
