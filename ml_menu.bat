@@ -44,7 +44,7 @@ set /p sc_choice="Enter choice: "
 
 if "%sc_choice%"=="1" (
     cd ml_models\skill_classifier
-    python train.py
+    python train_multilevel.py
     cd ..\..
     pause
     goto menu

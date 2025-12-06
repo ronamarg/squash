@@ -7,7 +7,11 @@ import 'package:http/http.dart' as http;
 import '../config/config.dart';
 import '../config/theme.dart';
 import '../services/firebase_service.dart';
+import '../services/gamification_service.dart';
 import '../services/ollama_service.dart';
+import '../services/skill_evaluation_service.dart';
+import '../widgets/gamification_widgets.dart';
+import '../widgets/level_up_celebration.dart';
 
 typedef QuestionData = List<Map<String, dynamic>>;
 
@@ -31,6 +35,7 @@ class _QuizScreenState extends State<QuizScreen> {
   final TextEditingController _codeController = TextEditingController();
   final OllamaService _ollamaService = OllamaService();
   final FirebaseService _firebaseService = FirebaseService();
+  final SkillEvaluationService _skillEvaluationService = SkillEvaluationService();
 
   String question = '';
   String correctCode = '';
@@ -44,6 +49,7 @@ class _QuizScreenState extends State<QuizScreen> {
   List<String> options = [];
   String correctAnswer = '';
   bool _passed = false;
+  String? _currentUserLevel; // Track current level for level-up detection
 
   late QuestionData currentQuizData;
 
@@ -51,7 +57,20 @@ class _QuizScreenState extends State<QuizScreen> {
   void initState() {
     super.initState();
     currentQuizData = widget.questionsToLoad;
+    _loadCurrentLevel();
     fetchQuestion();
+  }
+  
+  Future<void> _loadCurrentLevel() async {
+    final user = _firebaseService.currentUser;
+    if (user != null) {
+      final userData = await _firebaseService.getUserData(user.uid);
+      if (mounted && userData != null) {
+        setState(() {
+          _currentUserLevel = userData.skillClassification;
+        });
+      }
+    }
   }
 
   void fetchQuestion() {
@@ -137,6 +156,14 @@ class _QuizScreenState extends State<QuizScreen> {
       }
     });
 
+    // Award XP for correct quiz answers (fire and forget)
+    if (correct) {
+      final user = _firebaseService.currentUser;
+      if (user != null) {
+        GamificationService().awardXP(user.uid, 'quiz_correct');
+      }
+    }
+
     final explanation = correct ? 'Well done!' : 'The correct answer was: $correctAnswer';
 
     showDialog(
@@ -208,6 +235,24 @@ class _QuizScreenState extends State<QuizScreen> {
         lessonId: widget.lessonId!,
         bestScore: score.toInt(),
       );
+      
+      // Award XP for lesson completion
+      final gamificationService = GamificationService();
+      final xpResult = await gamificationService.awardXP(user.uid, 'lesson_complete');
+      
+      // Show level up dialog if leveled up
+      if (xpResult.leveledUp && mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          showDialog(
+            context: context,
+            barrierDismissible: true,
+            builder: (_) => LevelUpDialog(
+              newLevel: xpResult.newLevel,
+              newBadges: xpResult.newBadges,
+            ),
+          );
+        });
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -352,6 +397,33 @@ class _QuizScreenState extends State<QuizScreen> {
                                 final user = _firebaseService.currentUser;
                                 if (user != null) {
                                   await _firebaseService.updateQuizStats(user.uid, scoreValue);
+                                  
+                                  // Track code submission for RF re-evaluation
+                                  // This checks every 5 questions if user should level up
+                                  final wasCorrect = scoreValue >= 80;
+                                  final newLevel = await _skillEvaluationService.recordSubmission(
+                                    uid: user.uid,
+                                    userCode: userCode,
+                                    canonicalCode: correctCode,
+                                    wasCorrect: wasCorrect,
+                                  );
+                                  
+                                  // If level up occurred, show celebration
+                                  if (newLevel != null && _currentUserLevel != null && mounted) {
+                                    final oldLevel = _currentUserLevel!;
+                                    _currentUserLevel = newLevel;
+                                    
+                                    // Delay to let the result dialog show first
+                                    Future.delayed(const Duration(milliseconds: 500), () {
+                                      if (mounted) {
+                                        LevelUpCelebration.show(
+                                          context,
+                                          oldLevel: oldLevel,
+                                          newLevel: newLevel,
+                                        );
+                                      }
+                                    });
+                                  }
                                 }
 
                                 String? feedback;

@@ -332,34 +332,229 @@ Keep it concise (3-4 sentences), clear, and educational. Focus on teaching the d
 # ============================================================================
 # SKILL CLASSIFIER ENDPOINTS
 # ============================================================================
+
+# 5-level skill classification
+SKILL_LEVELS = ['beginner', 'novice', 'intermediate', 'advanced', 'expert']
+
+def score_based_classification(score: int, total: int = 15) -> str:
+    """
+    Score-based 5-level classification.
+    
+    For 15-question assessment:
+    - beginner: 0-3 (0-20%)
+    - novice: 4-6 (27-40%)
+    - intermediate: 7-10 (47-67%)
+    - advanced: 11-13 (73-87%)
+    - expert: 14-15 (93-100%)
+    """
+    if total == 0:
+        return 'beginner'
+    
+    percentage = (score / total) * 100
+    
+    if percentage >= 93:
+        return 'expert'
+    elif percentage >= 73:
+        return 'advanced'
+    elif percentage >= 47:
+        return 'intermediate'
+    elif percentage >= 27:
+        return 'novice'
+    else:
+        return 'beginner'
+
+
 @app.route('/predict_level', methods=['POST'])
 def predict_level():
-    """Classify user skill level from MCQ assessment results"""
+    """Classify user skill level from MCQ assessment results (5-level)"""
     try:
         data = request.get_json()
-        score = data.get('score', 0)
-        total = data.get('total', 15)
+        
+        # Support both formats
+        if 'score' in data and 'total' in data:
+            score = int(data['score'])
+            total = int(data['total'])
+        else:
+            # Calculate from q1, q2, etc.
+            score = sum(1 for k, v in data.items() if k.startswith('q') and v == 1)
+            total = sum(1 for k in data.keys() if k.startswith('q'))
         
         if total == 0:
-            return jsonify({'error': 'Total questions cannot be zero'}), 400
+            return jsonify({'error': 'No questions found'}), 400
         
-        # Rule-based classification
+        level = score_based_classification(score, total)
         percentage = (score / total) * 100
-        if percentage >= 70:
-            level = "advanced"
-        elif percentage >= 40:
-            level = "intermediate"
-        else:
-            level = "novice"
         
         return jsonify({
-            'predicted_level': level,
+            'level': level,
+            'predicted_level': level,  # backward compatibility
             'score': score,
             'total': total,
             'percentage': round(percentage, 1)
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/classify_from_code', methods=['POST'])
+def classify_from_code():
+    """
+    Classify user skill level by analyzing their code against a canonical solution.
+    Extracts features and uses RF model for classification.
+    
+    Expected JSON:
+    {
+        "user_code": "def add(a, b):\\n    return a + b",
+        "canonical_code": "def add(a, b):\\n    return a + b"
+    }
+    
+    Returns:
+    {
+        "level": "intermediate",
+        "confidence": 0.85,
+        "features": {...}
+    }
+    """
+    try:
+        data = request.get_json()
+        user_code = data.get('user_code', '')
+        canonical_code = data.get('canonical_code', '')
+        
+        print(f"\n{'='*60}")
+        print(f"[CLASSIFY_FROM_CODE] Request received")
+        print(f"{'='*60}")
+        print(f"User code ({len(user_code)} chars):\n{user_code[:200]}{'...' if len(user_code) > 200 else ''}")
+        print(f"\nCanonical code ({len(canonical_code)} chars):\n{canonical_code[:200]}{'...' if len(canonical_code) > 200 else ''}")
+        
+        if not user_code or not canonical_code:
+            return jsonify({'error': 'Both user_code and canonical_code required'}), 400
+        
+        # Extract features
+        features = extract_code_features(user_code, canonical_code)
+        print(f"\n[FEATURES EXTRACTED]:")
+        for k, v in features.items():
+            print(f"  {k}: {v}")
+        
+        # Use RF model if available, otherwise score-based
+        try:
+            from skill_classifier.api import model, scaler, label_encoder
+            import numpy as np
+            
+            if model is not None:
+                feature_names = [
+                    'canonical_code_length', 'canonical_token_count', 'length_ratio',
+                    'token_ratio', 'code_length', 'code_density', 'verbosity',
+                    'density_diff', 'token_count', 'is_verbose'
+                ]
+                X = np.array([[features.get(f, 0) for f in feature_names]])
+                print(f"\n[RF MODEL INPUT]: {X}")
+                
+                if scaler is not None:
+                    X = scaler.transform(X)
+                    print(f"[SCALED INPUT]: {X}")
+                
+                prediction = model.predict(X)[0]
+                probabilities = model.predict_proba(X)[0]
+                confidence = float(max(probabilities))
+                
+                if label_encoder is not None:
+                    level = label_encoder.inverse_transform([prediction])[0]
+                    print(f"\n[RF PREDICTION]:")
+                    print(f"  Raw prediction: {prediction}")
+                    print(f"  Decoded level: {level}")
+                    print(f"  Probabilities: {dict(zip(label_encoder.classes_, probabilities))}")
+                    print(f"  Confidence: {confidence:.3f}")
+                else:
+                    level = str(prediction)
+                    print(f"\n[RF PREDICTION]: {level} (confidence: {confidence:.3f})")
+                
+                print(f"{'='*60}\n")
+                
+                return jsonify({
+                    'level': level,
+                    'confidence': round(confidence, 3),
+                    'features': features,
+                    'method': 'rf_model'
+                })
+        except Exception as e:
+            print(f"[RF MODEL ERROR]: {e}, falling back to heuristic")
+        
+        # Fallback: heuristic based on similarity
+        similarity = features.get('similarity_score', 0.5)
+        print(f"\n[HEURISTIC FALLBACK]:")
+        print(f"  Similarity score: {similarity}")
+        if similarity >= 0.95:
+            level = 'expert'
+        elif similarity >= 0.85:
+            level = 'advanced'
+        elif similarity >= 0.70:
+            level = 'intermediate'
+        elif similarity >= 0.50:
+            level = 'novice'
+        else:
+            level = 'beginner'
+        
+        print(f"  Assigned level: {level}")
+        print(f"{'='*60}\n")
+        
+        return jsonify({
+            'level': level,
+            'confidence': 0.6,
+            'features': features,
+            'method': 'heuristic'
+        })
+        
+    except Exception as e:
+        print(f"[CLASSIFY_FROM_CODE ERROR]: {e}")
+        return jsonify({'error': str(e)}), 500
+
+
+def extract_code_features(user_code: str, canonical_code: str) -> dict:
+    """Extract features for RF model from user code and canonical solution."""
+    import tokenize
+    import io
+    
+    def count_tokens(code: str) -> int:
+        try:
+            tokens = list(tokenize.generate_tokens(io.StringIO(code).readline))
+            return len([t for t in tokens if t.type not in (tokenize.ENCODING, tokenize.ENDMARKER, tokenize.NEWLINE, tokenize.NL)])
+        except:
+            return len(code.split())
+    
+    user_len = len(user_code)
+    canon_len = len(canonical_code)
+    user_tokens = count_tokens(user_code)
+    canon_tokens = count_tokens(canonical_code)
+    
+    # Avoid division by zero
+    length_ratio = user_len / canon_len if canon_len > 0 else 1.0
+    token_ratio = user_tokens / canon_tokens if canon_tokens > 0 else 1.0
+    
+    user_density = user_tokens / user_len if user_len > 0 else 0
+    canon_density = canon_tokens / canon_len if canon_len > 0 else 0
+    
+    # Verbosity: how much longer is user code
+    verbosity = max(0, length_ratio - 1.0)
+    is_verbose = 1 if verbosity > 0.2 else 0
+    
+    # Similarity score (simple)
+    from difflib import SequenceMatcher
+    similarity = SequenceMatcher(None, user_code.strip(), canonical_code.strip()).ratio()
+    
+    return {
+        'canonical_code_length': canon_len,
+        'canonical_token_count': canon_tokens,
+        'length_ratio': round(length_ratio, 4),
+        'token_ratio': round(token_ratio, 4),
+        'code_length': user_len,
+        'code_density': round(user_density, 4),
+        'verbosity': round(verbosity, 4),
+        'density_diff': round(user_density - canon_density, 4),
+        'token_count': user_tokens,
+        'is_verbose': is_verbose,
+        'similarity_score': round(similarity, 4)
+    }
+
 
 # ============================================================================
 # CODE CORRUPTOR ENDPOINTS

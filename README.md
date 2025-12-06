@@ -61,7 +61,7 @@ App runtime values loaded via `EnvConfig` (not committed). Never add real secret
 ```bash
 flutter clean && flutter pub get
 flutter run
-cd ml_models/skill_classifier && python train.py
+cd ml_models/skill_classifier && python train_multilevel.py
 ```
 
 ## 🙌 Contributing

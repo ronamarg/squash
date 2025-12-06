@@ -15,22 +15,31 @@ ml_models/
 ## Model Overview
 
 ### 1. Skill Classifier (`skill_classifier/`)
-**Purpose:** Classify student proficiency level based on code quality metrics
+**Purpose:** Classify student proficiency into 5 levels based on code complexity
 
-**Model:** Random Forest Classifier
-- Input: Code quality features (score, length, token count, etc.)
-- Output: Proficiency level (beginner, intermediate, advanced)
+**Model:** Random Forest Classifier (91.4% accuracy)
+- Input: 10 code complexity features (no data leakage)
+- Output: 5-level classification (beginner → novice → intermediate → advanced → expert)
 - Trained model: `rf_model.joblib`
 
 **Files:**
-- `train.py` - Training script with GridSearchCV
+- `train_multilevel.py` - Training script with 5-level classification
+- `api.py` - Flask API (port 5002)
 - `rf_model.joblib` - Trained Random Forest model
+- `feature_scaler.joblib` - StandardScaler for features
+- `label_encoder.joblib` - LabelEncoder for class labels
 
 **Usage:**
 ```python
 import joblib
 model = joblib.load('ml_models/skill_classifier/rf_model.joblib')
-prediction = model.predict(features)
+scaler = joblib.load('ml_models/skill_classifier/feature_scaler.joblib')
+encoder = joblib.load('ml_models/skill_classifier/label_encoder.joblib')
+
+# Scale features and predict
+X_scaled = scaler.transform(features)
+prediction = model.predict(X_scaled)
+level = encoder.inverse_transform(prediction)[0]
 ```
 
 ---

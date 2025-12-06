@@ -1,65 +1,115 @@
-# Random Forest Skill Classifier
+# 5-Level Skill Classifier (Random Forest)
 
-General environment & workflow: see `../../README-DEV.md`. This README focuses on model specifics.
-
-Classifies student programming proficiency level based on code quality metrics.
+Classifies student programming proficiency into 5 levels based on code complexity metrics.
 
 ## Model Details
 
-**Type:** Random Forest Classifier (scikit-learn)
+**Type:** Random Forest Classifier (scikit-learn)  
+**Accuracy:** 91.4%  
+**F1-Score:** 0.91  
 
-**Input Features:**
-- `final_score` - Overall code quality score
-- `code_length` - Length of student code
-- `token_count` - Number of tokens in code
-- `canonical_code_length` - Length of reference solution
-- `canonical_token_count` - Number of tokens in reference
+### Output Levels
+1. **beginner** - New to Python
+2. **novice** - Basic syntax knowledge  
+3. **intermediate** - Functions and data structures
+4. **advanced** - Pythonic patterns
+5. **expert** - Mastery of all concepts
 
-**Output:** Proficiency level (beginner/intermediate/advanced)
+### Input Features (10 features, no data leakage)
+| Feature | Description |
+|---------|-------------|
+| `canonical_code_length` | Length of reference solution |
+| `canonical_token_count` | Tokens in reference solution |
+| `length_ratio` | Student/canonical length ratio |
+| `token_ratio` | Student/canonical token ratio |
+| `code_length` | Length of student code |
+| `code_density` | Tokens per character |
+| `verbosity` | Student verbosity score |
+| `density_diff` | Density difference from canonical |
+| `token_count` | Number of tokens in student code |
+| `is_verbose` | Binary: is code verbose? |
 
 ## Files
 
-- `train.py` - Training script with hyperparameter tuning
-- `rf_model.joblib` - Trained model (saved after training)
+| File | Description |
+|------|-------------|
+| `train_multilevel.py` | Training script with 5-level classification |
+| `api.py` | Flask API server (port 5002) |
+| `rf_model.joblib` | Trained Random Forest model |
+| `feature_scaler.joblib` | StandardScaler for feature normalization |
+| `label_encoder.joblib` | LabelEncoder for class labels |
+| `model_metadata.json` | Training metrics and hyperparameters |
+| `confusion_matrix.png` | Model performance visualization |
+| `feature_importance.png` | Feature importance chart |
 
 ## Training
 
 ```bash
 cd ml_models/skill_classifier
-python train.py
+python train_multilevel.py
 ```
 
 The script will:
 1. Load dataset from `../../data/processed/final_dataset.csv`
-2. Train with GridSearchCV for hyperparameter optimization
-3. Report accuracy, confusion matrix, and classification report
-4. Save the trained model as `rf_model.joblib`
+2. Engineer 10 features (excluding Final_Score to avoid leakage)
+3. Train Random Forest with GridSearchCV optimization
+4. Report accuracy, confusion matrix, and classification report
+5. Save model artifacts
 
-## Usage
+## API Usage
 
-```python
-import joblib
-import numpy as np
-
-# Load model
-model = joblib.load('ml_models/skill_classifier/rf_model.joblib')
-
-# Prepare features
-features = np.array([[
-    final_score,
-    code_length,
-    token_count,
-    canonical_code_length,
-    canonical_token_count
-]])
-
-# Predict
-proficiency = model.predict(features)
-print(f"Proficiency: {proficiency[0]}")
+### Start the API
+```bash
+cd ml_models/skill_classifier
+python api.py
 ```
 
-## Dataset Path
+### Endpoints
 
-The training script looks for the dataset in:
-- `../../data/processed/final_dataset.csv`
-- Or customize the path in `train.py`
+#### POST /predict_level
+Classify from MCQ assessment results:
+```json
+{
+  "q1": 1, "q2": 0, "q3": 1, ...
+}
+```
+
+Response:
+```json
+{
+  "level": "intermediate",
+  "score": 8,
+  "total": 15,
+  "percentage": 53.3,
+  "confidence": 0.75
+}
+```
+
+#### POST /predict_from_features
+Classify using code complexity features (for ML model):
+```json
+{
+  "canonical_code_length": 150,
+  "canonical_token_count": 45,
+  "length_ratio": 1.2,
+  ...
+}
+```
+
+#### GET /health
+Health check and model status.
+
+#### GET /levels
+List available skill levels with descriptions.
+
+## Integration
+
+The model integrates with:
+- `unified_api.py` - Main API (port 5000)
+- Flutter app assessment screen
+- Firebase user profile storage
+
+## Dataset
+
+Training data: `../../data/processed/final_dataset.csv`  
+Required columns: `Code`, `Canonical_Code`, `Expertise_Level`

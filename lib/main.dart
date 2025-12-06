@@ -1,21 +1,44 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
 
-import 'screens/auth_screen.dart';
-import 'screens/onboarding_screen.dart';
-import 'screens/main_menu.dart';
-import 'screens/difficulty_screen.dart';
-import 'services/firebase_service.dart';
-import 'models/user_model.dart'; 
 import 'config/theme.dart';
+import 'firebase_options.dart';
+import 'models/user_model.dart';
+import 'screens/auth_screen.dart';
+import 'screens/difficulty_screen.dart';
+import 'screens/main_menu.dart';
+import 'screens/onboarding_screen.dart';
+import 'screens/review_screen.dart';
+import 'services/firebase_service.dart';
+import 'services/notification_service.dart';
+
+/// Global navigator key for notification navigation
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
  
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  
+  // Initialize notification service
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+  
+  // Request notification permissions
+  await notificationService.requestPermissions();
+  
+  // Set up notification tap handler
+  NotificationService.onNotificationTapped = (payload) {
+    if (payload == 'daily_practice' || payload == 'streak_warning') {
+      // Navigate to review screen
+      navigatorKey.currentState?.push(
+        MaterialPageRoute(builder: (_) => const ReviewScreen()),
+      );
+    }
+  };
+  
   runApp(const MyApp()); 
 } 
  
@@ -152,12 +175,19 @@ class AuthWrapper extends StatelessWidget {
                   );
                 }
 
-                final skillClassification = userSnapshot.data?.skillClassification ?? 'novice';
+                final userData = userSnapshot.data;
+                final skillClassification = userData?.skillClassification ?? 'novice';
+                
+                // Apply stored notification settings with user's current streak
+                _applyNotificationSettings(snapshot.data!.uid, userData?.currentStreak ?? 0);
+                
+                // Map 5-level classification to available quiz pools
+                final levelKey = _mapToQuizPool(skillClassification);
                 // Load questions for the user's skill level
-                final questions = fullQuizData[skillClassification] ?? fullQuizData['novice']!;
+                final questions = fullQuizData[levelKey] ?? fullQuizData['novice']!;
                 
                 return MainMenuScreen(
-                  level: skillClassification,
+                  level: levelKey,
                   questionsToLoad: questions,
                 );
               },
@@ -166,5 +196,40 @@ class AuthWrapper extends StatelessWidget {
         );
       },
     );
+  }
+  
+  // Map 5-level classification to available quiz pools (novice/experienced)
+  String _mapToQuizPool(String level) {
+    switch (level.toLowerCase()) {
+      case 'beginner':
+      case 'novice':
+        return 'novice';
+      case 'intermediate':
+      case 'advanced':
+      case 'expert':
+        return 'experienced';
+      default:
+        return 'novice';
+    }
+  }
+  
+  // Apply stored notification settings when user logs in
+  void _applyNotificationSettings(String userId, int currentStreak) {
+    // Run async but don't await - fire and forget
+    Future.microtask(() async {
+      final notificationService = NotificationService();
+      await notificationService.applyStoredSettings();
+      
+      // Schedule streak warning if user has a streak to protect
+      if (currentStreak > 0) {
+        final settings = await notificationService.getSettings();
+        if (settings.streakWarningsEnabled) {
+          await notificationService.scheduleStreakWarning(
+            currentStreak: currentStreak,
+            hour: settings.streakWarningHour,
+          );
+        }
+      }
+    });
   }
 }

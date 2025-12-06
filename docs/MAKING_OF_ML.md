@@ -21,7 +21,7 @@ Classify learners into a proficiency bucket (e.g., beginner/novice, intermediate
 
 **Model & Training**
 - Model: Random Forest Classifier (scikit-learn)
-- Training script: `ml_models/skill_classifier/train.py`
+- Training script: `ml_models/skill_classifier/train_multilevel.py`
 - Training data: features derived from `data/processed/final_dataset.csv` (examples: token counts, code length, cyclomatic-like proxies, style metrics, previous scores)
 - Typical training routine:
   - Feature engineering: tokenize, normalize code, compute quantitative features (length, tokens, identifier diversity, average line length, number of constructs, etc.)
@@ -244,7 +244,7 @@ python infer.py        # quick inference script
 ---
 
 ## Where to read the code
-- Skill classifier training: `ml_models/skill_classifier/train.py`
+- Skill classifier training: `ml_models/skill_classifier/train_multilevel.py`
 - Corruptor training and inference: `ml_models/code_corruptor/train.py`, `ml_models/code_corruptor/infer.py`
 - Similarity scoring: `ml_models/code_similarity/scorer.py`
 - Normalization helpers: `ml_models/shared/normalize_code.py`

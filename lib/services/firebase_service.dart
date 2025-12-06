@@ -411,4 +411,15 @@ class FirebaseService {
       rethrow;
     }
   }
+
+  /// Generic method to update user data fields.
+  /// Used by SkillEvaluationService for RF re-evaluation tracking.
+  Future<void> updateUserData(String uid, Map<String, dynamic> data) async {
+    try {
+      await _firestore.collection('users').doc(uid).update(data);
+    } catch (e) {
+      debugPrint('Error updating user data: $e');
+      rethrow;
+    }
+  }
 }

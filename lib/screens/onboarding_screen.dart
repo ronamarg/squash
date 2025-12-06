@@ -4,12 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'assessment_screen.dart';
+import '../config/assessment_data.dart';
 import '../config/config.dart';
-import 'difficulty_screen.dart';
-import 'main_menu.dart';
-import '../services/firebase_service.dart';
 import '../config/theme.dart';
+import 'assessment_screen.dart';
+import 'coding_challenge_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -41,49 +40,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     },
   ];
 
-  // Assessment questions: 15 randomized multiple choice from novice pool
+  // Assessment questions: Use dedicated assessment questions from assessment_data.dart
   late List<Map<String, dynamic>> _assessmentQuestions;
 
   @override
   void initState() {
     super.initState();
-    _maybeSkipAssessment();
-    // Get all multiple choice questions from both novice and experienced pools
-    List<Map<String, dynamic>> mcPool = [];
-    if (fullQuizData.containsKey('novice')) {
-      mcPool.addAll(fullQuizData['novice']!
-        .where((q) => q.containsKey('options') && q['options'] != null));
-    }
-    if (fullQuizData.containsKey('experienced')) {
-      mcPool.addAll(fullQuizData['experienced']!
-        .where((q) => q.containsKey('options') && q['options'] != null));
-    }
-    mcPool.shuffle();
-    _assessmentQuestions = mcPool.take(15).toList();
-  }
-
-  Future<void> _maybeSkipAssessment() async {
-    final firebaseService = FirebaseService();
-    final currentUser = firebaseService.currentUser;
-    if (currentUser == null) return;
-    try {
-      final userData = await firebaseService.getUserData(currentUser.uid);
-      final skillRaw = (userData?.skillClassification ?? '').toString();
-      final skill = skillRaw.isEmpty ? 'novice' : skillRaw.toLowerCase();
-      if (!mounted) return;
-      if (skillRaw.isNotEmpty) {
-        // User already classified, go straight to main menu
-        final questions = fullQuizData[skill] ?? fullQuizData['novice']!;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => MainMenuScreen(level: skill, questionsToLoad: questions),
-          ),
-        );
-        return;
-      }
-    } catch (e) {
-      debugPrint('Onboarding skip check failed: $e');
-    }
+    // Note: Skip logic is now handled by AuthWrapper in main.dart
+    // OnboardingScreen only shows when user hasn't completed onboarding
+    // Use the professionally designed assessment questions
+    // These are ordered by difficulty and calibrated for skill classification
+    _assessmentQuestions = List<Map<String, dynamic>>.from(assessmentQuestions);
   }
 
   Future<void> _classifyUser() async {
@@ -92,8 +59,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     for (int i = 0; i < _answers.length; i++) {
       payload['q${i + 1}'] = _answers[i];
     }
-  // String determinedLevel = 'novice'; // Remove unused
-  final url = Uri.parse('${Config.apiBase}/predict_level');
+    
+    // Calculate raw MCQ score for blending with RF
+    int mcqScore = 0;
+    for (int i = 0; i < _answers.length; i++) {
+      if (_answers[i] == 1) mcqScore++;
+    }
+    
+    final url = Uri.parse('${Config.apiBase}/predict_level');
     String determinedLevel = 'novice';
     try {
       final response = await http.post(
@@ -117,35 +90,21 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('onboardingSeen', true);
     
-    // Save user skill classification to Firebase (also sets initial progressionValue)
-    final firebaseService = FirebaseService();
-    final currentUser = firebaseService.currentUser;
-    if (currentUser != null) {
-      try {
-        await firebaseService.updateSkillClassification(currentUser.uid, determinedLevel);
-      } catch (e) {
-        debugPrint('Error saving skill classification to Firebase: $e');
-      }
-    }
+    // Note: Don't save to Firebase yet - CodingChallengeScreen will blend
+    // MCQ score with RF predictions and save the final level
     
     if (!mounted) return;
 
-    // Navigate directly to the quiz for the determined level (fallback to novice)
-  final levelKey = determinedLevel.toString().toLowerCase();
-    List<Map<String, dynamic>> questionsForLevel = [];
-    try {
-      questionsForLevel = fullQuizData.containsKey(levelKey) ? fullQuizData[levelKey]! : fullQuizData['novice']!;
-    } catch (_) {
-      questionsForLevel = fullQuizData['novice']!;
-    }
-
+    // Navigate to coding challenges to refine the assessment
+    // The RF model will analyze their actual coding style
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (_) => MainMenuScreen(level: levelKey, questionsToLoad: questionsForLevel),
+        builder: (_) => CodingChallengeScreen(
+          preliminaryLevel: determinedLevel,
+          mcqScore: mcqScore,
+        ),
       ),
     );
-    // Optionally, you could route directly to the main quiz here
-    // using determinedLevel
   }
 
   Widget _buildPage(Map<String, String> data) {

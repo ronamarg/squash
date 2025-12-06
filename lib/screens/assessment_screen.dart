@@ -7,9 +7,9 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../config/config.dart';
-import 'difficulty_screen.dart';
-import 'main_menu.dart';
 import '../config/theme.dart';
+import 'coding_challenge_screen.dart';
+import 'difficulty_screen.dart';
 
 class AssessmentScreen extends StatefulWidget {
   const AssessmentScreen({super.key});
@@ -73,29 +73,26 @@ class _AssessmentScreenState extends State<AssessmentScreen> {
         
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('onboardingSeen', true);
-        await prefs.setString('userLevel', determinedLevel);
+        
+        // Calculate MCQ score for blending with RF
+        int mcqScore = 0;
+        for (int i = 0; i < _answers.length; i++) {
+          if (_answers[i] == 1) mcqScore++;
+        }
         
         if (!mounted) return;
-
-        List<Map<String, dynamic>> questionsForLevel;
-        try {
-          questionsForLevel = fullQuizData.containsKey(determinedLevel) 
-              ? fullQuizData[determinedLevel]! 
-              : fullQuizData['novice']!;
-        } catch (_) {
-          questionsForLevel = fullQuizData['novice']!;
-        }
 
         // Hide any soft keyboard/IME before navigating
         try {
           FocusScope.of(context).unfocus();
         } catch (_) {}
 
+        // Navigate to coding challenges for RF-based refinement
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => MainMenuScreen(
-              level: determinedLevel, 
-              questionsToLoad: questionsForLevel
+            builder: (_) => CodingChallengeScreen(
+              preliminaryLevel: determinedLevel, 
+              mcqScore: mcqScore,
             )
           )
         );

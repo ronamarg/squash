@@ -4,11 +4,13 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import '../services/ollama_service.dart';
-
 import '../config/config.dart';
 import '../config/theme.dart';
 import '../services/firebase_service.dart';
+import '../services/gamification_service.dart';
+import '../services/ollama_service.dart';
+import '../services/spaced_repetition_service.dart';
+import '../widgets/gamification_widgets.dart';
 
 class CodeFixQuizScreen extends StatefulWidget {
   final String difficulty;
@@ -196,6 +198,31 @@ class _CodeFixQuizScreenState extends State<CodeFixQuizScreen> {
             progressionValue = await _firebaseService.updateProgressionValue(user.uid, similarity);
             // Update quiz statistics
             await _firebaseService.updateQuizStats(user.uid, similarity);
+            
+            // Update SR streak (counts as practice)
+            final srService = SpacedRepetitionService();
+            await srService.updateStreak(user.uid);
+            
+            // Award XP for code fix based on difficulty (only if score >= 60)
+            if (similarity >= 60) {
+              final gamificationService = GamificationService();
+              final xpActivity = 'code_fix_${widget.difficulty.toLowerCase()}';
+              final xpResult = await gamificationService.awardXP(user.uid, xpActivity);
+              
+              // Show level up dialog if leveled up
+              if (xpResult.leveledUp && mounted) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  showDialog(
+                    context: context,
+                    barrierDismissible: true,
+                    builder: (_) => LevelUpDialog(
+                      newLevel: xpResult.newLevel,
+                      newBadges: xpResult.newBadges,
+                    ),
+                  );
+                });
+              }
+            }
           } catch (e) {
             debugPrint('Error updating user stats: $e');
           }

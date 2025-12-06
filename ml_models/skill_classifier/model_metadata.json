@@ -1,0 +1,96 @@
+{
+  "version": "2.0",
+  "created_at": "2025-12-06T01:41:16.443458",
+  "model_type": "RandomForestClassifier",
+  "num_classes": 5,
+  "classes": [
+    "beginner",
+    "novice",
+    "intermediate",
+    "advanced",
+    "expert"
+  ],
+  "thresholds": {
+    "beginner": [
+      0.0,
+      0.72
+    ],
+    "novice": [
+      0.72,
+      0.9
+    ],
+    "intermediate": [
+      0.9,
+      0.925
+    ],
+    "advanced": [
+      0.925,
+      0.94
+    ],
+    "expert": [
+      0.94,
+      1.01
+    ]
+  },
+  "features": [
+    "code_length",
+    "token_count",
+    "canonical_code_length",
+    "canonical_token_count",
+    "length_ratio",
+    "token_ratio",
+    "code_density",
+    "density_diff",
+    "verbosity",
+    "is_verbose"
+  ],
+  "metrics": {
+    "accuracy": 0.9143564356435644,
+    "f1_weighted": 0.9145628108444271,
+    "cv_accuracy_mean": 0.913407225099831,
+    "cv_accuracy_std": 0.0014150667827962733
+  },
+  "feature_importance": [
+    {
+      "feature": "canonical_code_length",
+      "importance": 0.18221202316584342
+    },
+    {
+      "feature": "canonical_token_count",
+      "importance": 0.15858295228232527
+    },
+    {
+      "feature": "length_ratio",
+      "importance": 0.14409670557718318
+    },
+    {
+      "feature": "token_ratio",
+      "importance": 0.1148045322382611
+    },
+    {
+      "feature": "code_length",
+      "importance": 0.09152339218144222
+    },
+    {
+      "feature": "code_density",
+      "importance": 0.08103889999343625
+    },
+    {
+      "feature": "verbosity",
+      "importance": 0.0731489676483365
+    },
+    {
+      "feature": "density_diff",
+      "importance": 0.06332550815423756
+    },
+    {
+      "feature": "token_count",
+      "importance": 0.06201876627701806
+    },
+    {
+      "feature": "is_verbose",
+      "importance": 0.029248252481916585
+    }
+  ],
+  "description": "Multi-level skill classifier (5 levels) for adaptive learning. Works with SM-2/FSRS for spaced repetition."
+}

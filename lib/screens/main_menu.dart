@@ -3,9 +3,14 @@
 import '../config/theme.dart';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
+import '../services/gamification_service.dart';
+import '../services/spaced_repetition_service.dart';
 import '../widgets/animated_shapes.dart';
+import '../widgets/gamification_widgets.dart';
+import '../widgets/sr_widgets.dart';
 import 'code_fix_quiz_screen.dart';
 import 'lessons_screen.dart';
+import 'review_screen.dart';
 import 'run_code_screen.dart';
 import 'user_profile_screen.dart';
 
@@ -27,6 +32,37 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  /// Get SR stats (streak and due cards) and gamification data for display
+  Future<Map<String, dynamic>> _getSRStats() async {
+    try {
+      final firebase = FirebaseService();
+      final user = firebase.currentUser;
+      if (user == null) return {'streak': 0, 'dueCards': 0, 'xp': 0, 'level': 1};
+      
+      final srService = SpacedRepetitionService();
+      final dueCards = await srService.getDueCards(user.uid);
+      final userData = await firebase.getUserData(user.uid);
+      final streak = userData?.currentStreak ?? 0;
+      final xp = userData?.xp ?? 0;
+      final level = userData?.level ?? 1;
+      
+      // Process daily login bonus
+      final gamification = GamificationService();
+      final bonus = await gamification.processDailyLogin(user.uid);
+      
+      return {
+        'streak': streak, 
+        'dueCards': dueCards.length,
+        'xp': xp + bonus.xpAwarded,
+        'level': level,
+        'dailyBonusAwarded': bonus.isFirstToday,
+        'dailyBonusXp': bonus.xpAwarded,
+      };
+    } catch (e) {
+      return {'streak': 0, 'dueCards': 0, 'xp': 0, 'level': 1};
+    }
   }
 
   @override
@@ -166,6 +202,76 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                   const SizedBox(width: 12),
                                   _buildBadge(palette: palette, icon: Icons.bolt, label: pvLabel),
                                 ],
+                              ),
+                              const SizedBox(height: 16),
+                              // Spaced Repetition widgets
+                              FutureBuilder<Map<String, dynamic>>(
+                                future: _getSRStats(),
+                                builder: (context, srSnapshot) {
+                                  final streak = srSnapshot.data?['streak'] ?? 0;
+                                  final dueCards = srSnapshot.data?['dueCards'] ?? 0;
+                                  final xp = srSnapshot.data?['xp'] ?? 0;
+                                  final level = srSnapshot.data?['level'] ?? 1;
+                                  final dailyBonusAwarded = srSnapshot.data?['dailyBonusAwarded'] ?? false;
+                                  final dailyBonusXp = srSnapshot.data?['dailyBonusXp'] ?? 0;
+                                  
+                                  // Show daily bonus toast when first loaded
+                                  if (dailyBonusAwarded && srSnapshot.connectionState == ConnectionState.done) {
+                                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Row(
+                                            children: [
+                                              const Icon(Icons.star, color: Colors.amber),
+                                              const SizedBox(width: 8),
+                                              Text('Daily bonus! +$dailyBonusXp XP 🎉'),
+                                            ],
+                                          ),
+                                          backgroundColor: palette.surface,
+                                          behavior: SnackBarBehavior.floating,
+                                          duration: const Duration(seconds: 3),
+                                        ),
+                                      );
+                                    });
+                                  }
+                                  
+                                  return Column(
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          StreakDisplay(
+                                            currentStreak: streak,
+                                            compact: true,
+                                          ),
+                                          const SizedBox(width: 16),
+                                          DueCardsCounter(
+                                            dueCount: dueCards,
+                                            compact: true,
+                                            onTap: dueCards > 0 ? () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder: (_) => const ReviewScreen(),
+                                                ),
+                                              ).then((_) {
+                                                if (mounted) setState(() {});
+                                              });
+                                            } : null,
+                                          ),
+                                          const SizedBox(width: 16),
+                                          // XP/Level compact display
+                                          GamificationXPBar(
+                                            currentXp: xp,
+                                            level: level,
+                                            compact: true,
+                                            accentColor: palette.accent,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                },
                               ),
                             ],
                           ),
